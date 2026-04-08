@@ -3,15 +3,18 @@ Team Name
 Robust
 
 Project Name
-[your project name]
+NeighbourHub
 
 Selected Track
-[Track Name – e.g., AI/ML, Web3, Healthcare, Sustainability, etc.]
+web dev
 
 Selected Problem Statement (PS)
-[Problem Statement ID / Title]
+neighbourhood service marketplace
+
 
 Team Leader
-Name: kavya Srivastava Phone: [Phone Number]
+Name: kavya Srivastava Phone: 9455016030
 
-Team Members & Roles Name Role [Member 1 Name] [Role – e.g., Frontend Developer] [Member 2 Name] [Role – Backend Developer] [Member 3 Name] [Role – AI/ML Engineer]
+Anshiks Mishra -javascript 
+Ganesh Mishra -UI/ frontend(HTML+CSS)
+Rishab Prashar- data + storage
