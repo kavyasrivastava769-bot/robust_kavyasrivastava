@@ -1,1057 +1,1892 @@
-  <!DOCTYPE html>
-<html lang="en">
+ <!DOCTYPE html>
+<html lang="en" data-theme="dark">
 <head>
-<meta charset="UTF-8" />
+<meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
 <title>NeighbourHub – Local Service Marketplace</title>
-<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;1,9..40,300&display=swap" rel="stylesheet"/>
 <style>
-  /* ─── CSS Variables ─────────────────────────────────────── */
-  :root {
-    --bg:       #0a0c10;
-    --surface:  #111318;
-    --card:     #161a22;
-    --border:   #252a35;
-    --accent:   #f4c542;
-    --accent2:  #e85d45;
-    --text:     #e8eaf0;
-    --muted:    #6b7280;
-    --success:  #34d399;
-    --radius:   14px;
-    --font-head: 'Syne', sans-serif;
-    --font-body: 'DM Sans', sans-serif;
-  }
+/* ═══════════════════════════════════════════════════════
+   THEME SYSTEM — Dark (default) + Light
+═══════════════════════════════════════════════════════ */
+:root,[data-theme="dark"]{
+  --bg:#0a0c10; --surface:#111318; --card:#161a22; --card2:#1c2130;
+  --border:#252a35; --border2:#1e2330;
+  --accent:#f4c542; --accent-glow:rgba(244,197,66,.25);
+  --accent2:#e85d45; --text:#e8eaf0; --text2:#c5c8d4; --muted:#6b7280;
+  --success:#34d399; --info:#60a5fa; --warn:#fbbf24;
+  --radius:14px; --radius-sm:8px; --radius-lg:20px;
+  --font-head:'Syne',sans-serif; --font-body:'DM Sans',sans-serif;
+  --shadow-card:0 4px 24px rgba(0,0,0,.4);
+  --shadow-hover:0 16px 48px rgba(0,0,0,.55);
+  --glass-bg:rgba(22,26,34,.7);
+  --gradient-hero:linear-gradient(135deg,#0a0c10 0%,#111828 50%,#0a0c10 100%);
+  --skeleton:#1e2330;
+  --skeleton-shine:#252a35;
+}
+[data-theme="light"]{
+  --bg:#f4f5f7; --surface:#ffffff; --card:#ffffff; --card2:#f8f9fb;
+  --border:#e2e5ea; --border2:#edf0f4;
+  --accent:#d4a017; --accent-glow:rgba(212,160,23,.2);
+  --accent2:#d94f38; --text:#0f1117; --text2:#374151; --muted:#9ca3af;
+  --success:#059669; --info:#2563eb; --warn:#d97706;
+  --shadow-card:0 2px 12px rgba(0,0,0,.08);
+  --shadow-hover:0 12px 40px rgba(0,0,0,.14);
+  --glass-bg:rgba(255,255,255,.85);
+  --gradient-hero:linear-gradient(135deg,#f4f5f7 0%,#e8edf5 50%,#f4f5f7 100%);
+  --skeleton:#e8eaed;
+  --skeleton-shine:#f1f3f5;
+}
 
-  /* ─── Reset & Base ──────────────────────────────────────── */
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-  html { scroll-behavior: smooth; }
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: var(--font-body);
-    font-size: 15px;
-    min-height: 100vh;
-    overflow-x: hidden;
-  }
+/* ═══════════════════════════════════════════════════════
+   RESET & BASE
+═══════════════════════════════════════════════════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{
+  background:var(--bg); color:var(--text);
+  font-family:var(--font-body); font-size:15px;
+  min-height:100vh; overflow-x:hidden;
+  transition:background .3s,color .3s;
+  padding-bottom:80px; /* space for mobile bottom nav */
+}
+@media(min-width:768px){body{padding-bottom:0}}
 
-  /* ─── Noise texture overlay ──────────────────────────────── */
-  body::before {
-    content: '';
-    position: fixed; inset: 0;
-    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
-    pointer-events: none; z-index: 999; opacity: .5;
-  }
+/* Noise texture */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:998;opacity:.6;
+}
 
-  /* ─── Header ─────────────────────────────────────────────── */
-  header {
-    position: sticky; top: 0; z-index: 100;
-    background: rgba(10, 12, 16, 0.88);
-    backdrop-filter: blur(18px);
-    border-bottom: 1px solid var(--border);
-    padding: 0 2rem;
-    display: flex; align-items: center; justify-content: space-between;
-    height: 64px;
-    animation: slideDown .5s ease both;
-  }
-  @keyframes slideDown { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+/* ═══════════════════════════════════════════════════════
+   KEYFRAME ANIMATIONS
+═══════════════════════════════════════════════════════ */
+@keyframes slideDown    {from{transform:translateY(-100%);opacity:0}to{transform:none;opacity:1}}
+@keyframes fadeUp       {from{opacity:0;transform:translateY(28px)}to{opacity:1;transform:none}}
+@keyframes cardIn       {from{opacity:0;transform:translateY(18px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes spin         {to{transform:rotate(360deg)}}
+@keyframes pulse        {0%,100%{opacity:1}50%{opacity:.35}}
+@keyframes shimmer      {0%{background-position:-400px 0}100%{background-position:400px 0}}
+@keyframes scaleIn      {from{transform:scale(.5);opacity:0}to{transform:scale(1);opacity:1}}
+@keyframes heartPop     {0%{transform:scale(1)}40%{transform:scale(1.4)}70%{transform:scale(.9)}100%{transform:scale(1)}}
+@keyframes successDraw  {from{stroke-dashoffset:100}to{stroke-dashoffset:0}}
+@keyframes slideUp      {from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+@keyframes tabSlide     {from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:none}}
+@keyframes ripple       {to{transform:scale(4);opacity:0}}
+@keyframes float        {0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+@keyframes gradientShift{0%,100%{background-position:0% 50%}50%{background-position:100% 50%}}
 
-  .logo {
-    font-family: var(--font-head);
-    font-size: 1.4rem; font-weight: 800;
-    letter-spacing: -0.5px;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .logo span.dot { color: var(--accent); }
-  .logo .badge {
-    font-size: 10px; font-weight: 600;
-    background: var(--accent); color: #000;
-    padding: 2px 6px; border-radius: 4px;
-    letter-spacing: .5px;
-    font-family: var(--font-body);
-  }
+/* ═══════════════════════════════════════════════════════
+   OFFLINE BANNER
+═══════════════════════════════════════════════════════ */
+.offline-banner{
+  display:none;position:fixed;top:0;left:0;right:0;z-index:500;
+  background:linear-gradient(90deg,#e85d45,#d4421c);
+  color:#fff;text-align:center;font-size:13px;font-weight:500;
+  padding:9px;gap:8px;align-items:center;justify-content:center;
+}
+.offline-banner.show{display:flex}
+body.offline header{top:36px}
 
-  .header-actions { display: flex; gap: 10px; align-items: center; }
-  .btn {
-    font-family: var(--font-body);
-    font-size: 14px; font-weight: 500;
-    border: none; cursor: pointer;
-    border-radius: 8px;
-    padding: 8px 16px;
-    transition: all .2s;
-    letter-spacing: .2px;
-  }
-  .btn-primary {
-    background: var(--accent); color: #000;
-  }
-  .btn-primary:hover { background: #ffd460; transform: translateY(-1px); box-shadow: 0 4px 20px rgba(244,197,66,.3); }
-  .btn-ghost {
-    background: transparent; color: var(--muted);
-    border: 1px solid var(--border);
-  }
-  .btn-ghost:hover { color: var(--text); border-color: var(--muted); }
-  .btn-danger {
-    background: rgba(232,93,69,.12); color: var(--accent2);
-    border: 1px solid rgba(232,93,69,.25);
-  }
-  .btn-danger:hover { background: var(--accent2); color: #fff; border-color: var(--accent2); }
+/* ═══════════════════════════════════════════════════════
+   HEADER  (glassmorphism)
+═══════════════════════════════════════════════════════ */
+header{
+  position:sticky;top:0;z-index:100;
+  background:var(--glass-bg);
+  backdrop-filter:blur(20px) saturate(1.5);
+  -webkit-backdrop-filter:blur(20px) saturate(1.5);
+  border-bottom:1px solid var(--border);
+  padding:0 2rem;
+  display:flex;align-items:center;justify-content:space-between;
+  height:64px;
+  animation:slideDown .5s ease both;
+  transition:background .3s,border-color .3s;
+}
+.logo{font-family:var(--font-head);font-size:1.4rem;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+.logo .dot{color:var(--accent)}
+.logo .badge{
+  font-size:10px;font-weight:700;
+  background:linear-gradient(90deg,var(--accent),#ffb700);
+  color:#000;padding:2px 7px;border-radius:5px;
+  font-family:var(--font-body);letter-spacing:.5px;
+}
+.header-actions{display:flex;gap:8px;align-items:center}
 
-  /* ─── User Chip (header) ─────────────────────────────────── */
-  .user-chip {
-    display: flex; align-items: center; gap: 8px;
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 30px; padding: 5px 14px 5px 6px;
-    font-size: 13px; font-weight: 500;
-    animation: fadeUp .4s ease both;
-  }
-  .user-avatar {
-    width: 28px; height: 28px; border-radius: 50%;
-    background: var(--accent); color: #000;
-    font-family: var(--font-head); font-weight: 800; font-size: 13px;
-    display: flex; align-items: center; justify-content: center;
-    flex-shrink: 0;
-  }
+/* Theme toggle */
+.theme-toggle{
+  width:36px;height:36px;border-radius:50%;
+  background:var(--card);border:1px solid var(--border);
+  cursor:pointer;font-size:16px;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .25s;color:var(--text);
+}
+.theme-toggle:hover{border-color:var(--accent);background:var(--accent);color:#000;transform:rotate(20deg)}
 
-  /* ─── Auth Modal Extras ──────────────────────────────────── */
-  .auth-tabs {
-    display: flex; border-bottom: 1px solid var(--border);
-    margin-bottom: 1.6rem; gap: 0;
-  }
-  .auth-tab {
-    flex: 1; padding: 10px; text-align: center;
-    font-family: var(--font-head); font-size: 14px; font-weight: 700;
-    color: var(--muted); cursor: pointer;
-    border-bottom: 2px solid transparent;
-    transition: all .2s; background: none; border-top: none; border-left: none; border-right: none;
-    letter-spacing: .3px;
-  }
-  .auth-tab.active { color: var(--accent); border-bottom-color: var(--accent); }
-  .auth-tab:hover:not(.active) { color: var(--text); }
+/* ═══════════════════════════════════════════════════════
+   BUTTONS  (with ripple + micro-animations)
+═══════════════════════════════════════════════════════ */
+.btn{
+  font-family:var(--font-body);font-size:14px;font-weight:500;
+  border:none;cursor:pointer;border-radius:var(--radius-sm);
+  padding:9px 18px;transition:all .2s cubic-bezier(.34,1.56,.64,1);
+  position:relative;overflow:hidden;
+  user-select:none;-webkit-user-select:none;
+}
+.btn:active{transform:scale(.96)!important}
+.btn-primary{
+  background:linear-gradient(135deg,var(--accent),#ffb700);
+  color:#000;font-weight:600;
+}
+.btn-primary:hover{
+  background:linear-gradient(135deg,#ffd460,var(--accent));
+  transform:translateY(-2px);
+  box-shadow:0 6px 24px var(--accent-glow);
+}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}
+.btn-ghost:hover{color:var(--text);border-color:var(--muted);background:var(--card)}
+.btn-danger{background:rgba(232,93,69,.12);color:var(--accent2);border:1px solid rgba(232,93,69,.25)}
+.btn-danger:hover{background:var(--accent2);color:#fff;border-color:var(--accent2);box-shadow:0 4px 16px rgba(232,93,69,.3)}
+.btn-success{background:rgba(52,211,153,.12);color:var(--success);border:1px solid rgba(52,211,153,.25)}
+.btn-success:hover{background:var(--success);color:#000}
+.btn-info{background:rgba(96,165,250,.12);color:var(--info);border:1px solid rgba(96,165,250,.25)}
+.btn-info:hover{background:var(--info);color:#000}
+.btn-sm{padding:6px 12px;font-size:12px}
 
-  .field-error {
-    font-size: 11.5px; color: var(--accent2);
-    margin-top: 4px; display: none;
-  }
-  .field-error.show { display: block; }
+/* Ripple effect */
+.ripple-effect{
+  position:absolute;border-radius:50%;
+  width:8px;height:8px;margin-top:-4px;margin-left:-4px;
+  background:rgba(255,255,255,.4);
+  animation:ripple .6s ease-out forwards;
+  pointer-events:none;
+}
 
-  input.invalid {
-    border-color: var(--accent2) !important;
-    box-shadow: 0 0 0 3px rgba(232,93,69,.1) !important;
-  }
+/* ═══════════════════════════════════════════════════════
+   USER CHIP
+═══════════════════════════════════════════════════════ */
+.user-chip{
+  display:flex;align-items:center;gap:8px;
+  background:var(--card);border:1px solid var(--border);
+  border-radius:30px;padding:5px 14px 5px 6px;
+  font-size:13px;font-weight:500;cursor:pointer;
+  transition:all .2s;
+}
+.user-chip:hover{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-glow)}
+.user-avatar{
+  width:28px;height:28px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#ffb700);
+  color:#000;font-family:var(--font-head);font-weight:800;font-size:13px;
+  display:flex;align-items:center;justify-content:center;
+}
+.role-badge{font-size:10px;padding:2px 6px;border-radius:4px;font-weight:700;letter-spacing:.5px}
+.role-customer{background:rgba(96,165,250,.2);color:var(--info)}
+.role-worker{background:rgba(52,211,153,.2);color:var(--success)}
 
-  .auth-divider {
-    text-align: center; font-size: 12px; color: var(--muted);
-    margin: 1rem 0; position: relative;
-  }
-  .auth-divider::before, .auth-divider::after {
-    content: ''; position: absolute; top: 50%;
-    width: 40%; height: 1px; background: var(--border);
-  }
-  .auth-divider::before { left: 0; }
-  .auth-divider::after  { right: 0; }
+/* ═══════════════════════════════════════════════════════
+   NAV TABS  (with slide transition)
+═══════════════════════════════════════════════════════ */
+.nav-tabs{
+  display:flex;gap:4px;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;padding:4px;margin-bottom:2rem;
+  transition:all .3s;
+}
+.nav-tab{
+  flex:1;padding:10px 14px;text-align:center;
+  font-family:var(--font-body);font-size:13px;font-weight:500;
+  color:var(--muted);cursor:pointer;border-radius:9px;
+  border:none;background:transparent;transition:all .25s;
+  min-height:44px;
+}
+.nav-tab.active{
+  background:var(--card);color:var(--text);
+  border:1px solid var(--border);
+  box-shadow:var(--shadow-card);
+}
+.nav-tab:hover:not(.active){color:var(--text);background:var(--card2)}
 
-  .password-wrap { position: relative; }
-  .toggle-pw {
-    position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
-    background: none; border: none; cursor: pointer; color: var(--muted);
-    font-size: 15px; padding: 2px;
-  }
-  .toggle-pw:hover { color: var(--text); }
-  .password-wrap input { padding-right: 40px; }
+/* ═══════════════════════════════════════════════════════
+   HERO  (animated gradient bg)
+═══════════════════════════════════════════════════════ */
+.hero{
+  padding:5.5rem 2rem 3.5rem;text-align:center;
+  background:var(--gradient-hero);
+  position:relative;overflow:hidden;
+  animation:fadeUp .6s ease both .1s;
+}
+.hero-glow{
+  position:absolute;top:-60px;left:50%;transform:translateX(-50%);
+  width:600px;height:300px;
+  background:radial-gradient(ellipse at center,rgba(244,197,66,.08) 0%,transparent 70%);
+  pointer-events:none;
+}
+.hero-eyebrow{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:11px;font-weight:600;letter-spacing:2px;
+  text-transform:uppercase;color:var(--accent);
+  margin-bottom:1.4rem;
+  background:rgba(244,197,66,.08);
+  border:1px solid rgba(244,197,66,.22);
+  padding:6px 14px;border-radius:20px;
+  backdrop-filter:blur(8px);
+}
+.hero h1{
+  font-family:var(--font-head);
+  font-size:clamp(2.2rem,5vw,3.8rem);
+  font-weight:800;line-height:1.08;letter-spacing:-1.5px;
+  max-width:760px;margin:0 auto 1rem;
+}
+.hero h1 em{
+  font-style:normal;
+  background:linear-gradient(90deg,var(--accent),#ffb700,var(--accent));
+  background-size:200% auto;
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;
+  background-clip:text;
+  animation:gradientShift 3s ease infinite;
+}
+.hero p{color:var(--text2);font-size:1.05rem;max-width:480px;margin:0 auto 2rem;line-height:1.75}
 
-  /* ─── Auth Gate Banner ───────────────────────────────────── */
-  .auth-gate {
-    display: none;
-    background: rgba(244,197,66,.06);
-    border: 1px solid rgba(244,197,66,.18);
-    border-radius: 10px; padding: 14px 18px;
-    margin-bottom: 1.4rem;
-    align-items: center; gap: 12px;
-    font-size: 13px; color: var(--muted);
-  }
-  .auth-gate.show { display: flex; }
-  .auth-gate strong { color: var(--text); }
-  .auth-gate .gate-btn {
-    margin-left: auto; flex-shrink: 0;
-    font-size: 12px; padding: 6px 12px;
-  }
+/* ═══════════════════════════════════════════════════════
+   SEARCH BAR  (with suggestions)
+═══════════════════════════════════════════════════════ */
+.search-bar{max-width:700px;margin:0 auto 3rem;display:flex;gap:10px;animation:fadeUp .6s ease both .2s}
+.search-wrap{flex:1;position:relative}
+.search-wrap .icon{position:absolute;left:14px;top:50%;transform:translateY(-50%);color:var(--muted);font-size:16px;z-index:1}
+.search-clear{
+  position:absolute;right:12px;top:50%;transform:translateY(-50%);
+  background:none;border:none;cursor:pointer;color:var(--muted);
+  font-size:16px;padding:2px;display:none;transition:color .2s;
+}
+.search-clear.show{display:block}
+.search-clear:hover{color:var(--accent2)}
 
-  /* ─── Hero ───────────────────────────────────────────────── */
-  .hero {
-    padding: 5rem 2rem 3rem;
-    text-align: center;
-    position: relative;
-    animation: fadeUp .6s ease both .1s;
-  }
-  @keyframes fadeUp { from { opacity:0; transform: translateY(28px); } to { opacity:1; transform: none; } }
+/* Suggestions dropdown */
+.suggestions{
+  position:absolute;top:calc(100% + 6px);left:0;right:0;z-index:150;
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:12px;overflow:hidden;
+  box-shadow:0 12px 40px rgba(0,0,0,.3);
+  display:none;
+}
+.suggestions.show{display:block;animation:slideUp .2s ease both}
+.suggestion-item{
+  padding:11px 16px;cursor:pointer;font-size:14px;
+  display:flex;align-items:center;gap:10px;
+  transition:background .15s;color:var(--text2);
+}
+.suggestion-item:hover{background:var(--card);color:var(--text)}
+.suggestion-item .s-icon{font-size:16px;width:20px;text-align:center}
+.suggestion-item .s-label{flex:1}
+.suggestion-item .s-cat{font-size:11px;color:var(--muted)}
 
-  .hero-eyebrow {
-    display: inline-flex; align-items: center; gap: 6px;
-    font-size: 12px; font-weight: 500; letter-spacing: 1.5px;
-    text-transform: uppercase; color: var(--accent);
-    margin-bottom: 1.2rem;
-    background: rgba(244,197,66,.08);
-    border: 1px solid rgba(244,197,66,.2);
-    padding: 5px 12px; border-radius: 20px;
-  }
-  .hero h1 {
-    font-family: var(--font-head);
-    font-size: clamp(2.2rem, 5vw, 3.8rem);
-    font-weight: 800; line-height: 1.1;
-    letter-spacing: -1.5px;
-    max-width: 760px; margin: 0 auto 1rem;
-  }
-  .hero h1 em { font-style: normal; color: var(--accent); }
-  .hero p {
-    color: var(--muted); font-size: 1rem; max-width: 480px; margin: 0 auto 2.5rem;
-    line-height: 1.7;
-  }
+/* Inputs */
+input,select,textarea{
+  font-family:var(--font-body);background:var(--surface);
+  border:1px solid var(--border);color:var(--text);
+  border-radius:10px;padding:12px 14px;font-size:14px;
+  transition:border-color .2s,box-shadow .2s,background .3s;
+  outline:none;width:100%;
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--accent);
+  box-shadow:0 0 0 3px var(--accent-glow);
+}
+#searchInput{padding-left:42px;padding-right:36px}
+select{cursor:pointer}
+select option{background:var(--surface);color:var(--text)}
 
-  /* ─── Search + Filter Bar ────────────────────────────────── */
-  .search-bar {
-    max-width: 680px; margin: 0 auto 3rem;
-    display: flex; gap: 10px;
-    animation: fadeUp .6s ease both .2s;
-  }
-  .search-wrap {
-    flex: 1; position: relative;
-  }
-  .search-wrap .icon {
-    position: absolute; left: 14px; top: 50%; transform: translateY(-50%);
-    color: var(--muted); font-size: 16px;
-  }
-  input[type="text"], input[type="number"], select, textarea {
-    font-family: var(--font-body);
-    background: var(--surface);
-    border: 1px solid var(--border);
-    color: var(--text);
-    border-radius: 10px;
-    padding: 12px 14px;
-    font-size: 14px;
-    transition: border-color .2s, box-shadow .2s;
-    outline: none;
-    width: 100%;
-  }
-  input[type="text"]:focus, input[type="number"]:focus, select:focus, textarea:focus {
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px rgba(244,197,66,.12);
-  }
-  #searchInput { padding-left: 40px; }
-  select { cursor: pointer; }
-  select option { background: var(--surface); }
+/* ═══════════════════════════════════════════════════════
+   FILTER ROW  (pills + rating filter)
+═══════════════════════════════════════════════════════ */
+.filter-row{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:.8rem;animation:fadeUp .6s ease both .3s;align-items:center}
+.pills{display:flex;gap:8px;flex-wrap:wrap;flex:1}
+.pill{
+  font-family:var(--font-body);font-size:13px;
+  padding:7px 15px;border-radius:20px;
+  border:1px solid var(--border);background:transparent;
+  color:var(--muted);cursor:pointer;transition:all .2s;
+  min-height:38px;
+}
+.pill:hover{color:var(--text);border-color:var(--muted);background:var(--card)}
+.pill.active{
+  background:linear-gradient(135deg,var(--accent),#ffb700);
+  color:#000;border-color:transparent;font-weight:600;
+  box-shadow:0 4px 12px var(--accent-glow);
+}
+.rating-filter{
+  display:flex;gap:6px;align-items:center;
+  font-size:12px;color:var(--muted);font-weight:500;
+}
+.rating-filter select{
+  width:auto;padding:7px 10px;font-size:12px;border-radius:20px;
+}
 
-  /* ─── Stats Row ──────────────────────────────────────────── */
-  .stats-row {
-    display: flex; justify-content: center; gap: 2.5rem;
-    margin-bottom: 2.5rem;
-    animation: fadeUp .6s ease both .25s;
-  }
-  .stat { text-align: center; }
-  .stat-num {
-    font-family: var(--font-head);
-    font-size: 1.6rem; font-weight: 800;
-    color: var(--accent);
-  }
-  .stat-label { font-size: 12px; color: var(--muted); margin-top: 2px; }
+/* ═══════════════════════════════════════════════════════
+   STATS ROW
+═══════════════════════════════════════════════════════ */
+.stats-row{display:flex;justify-content:center;gap:3rem;margin-bottom:2.5rem;animation:fadeUp .6s ease both .25s}
+.stat{text-align:center}
+.stat-num{
+  font-family:var(--font-head);font-size:1.7rem;font-weight:800;
+  background:linear-gradient(135deg,var(--accent),#ffb700);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.stat-label{font-size:12px;color:var(--muted);margin-top:2px;letter-spacing:.3px}
 
-  /* ─── Section ────────────────────────────────────────────── */
-  .section {
-    max-width: 1100px; margin: 0 auto;
-    padding: 0 2rem 4rem;
-  }
-  .section-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1.4rem;
-  }
-  .section-title {
-    font-family: var(--font-head);
-    font-size: 1.15rem; font-weight: 700;
-    display: flex; align-items: center; gap: 8px;
-  }
-  .section-title .count {
-    font-size: 11px; background: var(--border);
-    color: var(--muted); padding: 2px 8px; border-radius: 20px;
-    font-family: var(--font-body); font-weight: 500;
-  }
+/* ═══════════════════════════════════════════════════════
+   SECTION
+═══════════════════════════════════════════════════════ */
+.section{max-width:1100px;margin:0 auto;padding:0 2rem 4rem}
+.section-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.4rem}
+.section-title{font-family:var(--font-head);font-size:1.15rem;font-weight:700;display:flex;align-items:center;gap:8px}
+.section-title .count{font-size:11px;background:var(--border);color:var(--muted);padding:2px 9px;border-radius:20px;font-family:var(--font-body);font-weight:500}
 
-  /* ─── Category Pills ─────────────────────────────────────── */
-  .pills {
-    display: flex; gap: 8px; flex-wrap: wrap;
-    margin-bottom: 2rem;
-    animation: fadeUp .6s ease both .3s;
-  }
-  .pill {
-    font-family: var(--font-body); font-size: 13px;
-    padding: 6px 14px; border-radius: 20px;
-    border: 1px solid var(--border);
-    background: transparent; color: var(--muted);
-    cursor: pointer; transition: all .18s;
-  }
-  .pill:hover { color: var(--text); border-color: var(--muted); }
-  .pill.active {
-    background: var(--accent); color: #000;
-    border-color: var(--accent); font-weight: 600;
-  }
+/* Tab content transition */
+.tab-content{animation:tabSlide .3s ease both}
 
-  /* ─── Grid ───────────────────────────────────────────────── */
-  .grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-    gap: 18px;
-  }
+/* ═══════════════════════════════════════════════════════
+   SKELETON LOADERS
+═══════════════════════════════════════════════════════ */
+.skeleton-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:18px}
+.skeleton-card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:22px;
+}
+.skel{
+  background:linear-gradient(90deg,var(--skeleton) 0%,var(--skeleton-shine) 50%,var(--skeleton) 100%);
+  background-size:800px 100%;
+  border-radius:6px;
+  animation:shimmer 1.4s ease infinite;
+}
+.skel-icon{width:42px;height:42px;border-radius:10px;margin-bottom:14px}
+.skel-title{height:16px;width:70%;margin-bottom:8px}
+.skel-sub{height:12px;width:50%;margin-bottom:16px}
+.skel-line{height:11px;margin-bottom:6px}
+.skel-line.short{width:80%}
+.skel-line.shorter{width:60%}
+.skel-footer{display:flex;justify-content:space-between;align-items:center;margin-top:16px;padding-top:14px;border-top:1px solid var(--border2)}
+.skel-price{height:20px;width:80px}
+.skel-btn{height:32px;width:90px;border-radius:8px}
 
-  /* ─── Service Card ───────────────────────────────────────── */
-  .card {
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius);
-    padding: 22px;
-    transition: transform .22s, border-color .22s, box-shadow .22s;
-    position: relative; overflow: hidden;
-    animation: cardIn .4s ease both;
-    cursor: default;
-  }
-  @keyframes cardIn { from { opacity:0; transform: translateY(16px) scale(.97); } to { opacity:1; transform: none; } }
-  .card:hover {
-    transform: translateY(-4px);
-    border-color: rgba(244,197,66,.25);
-    box-shadow: 0 12px 40px rgba(0,0,0,.4);
-  }
-  .card::before {
-    content: '';
-    position: absolute; top: 0; left: 0; right: 0; height: 2px;
-    background: linear-gradient(90deg, var(--accent), transparent);
-    opacity: 0; transition: opacity .22s;
-  }
-  .card:hover::before { opacity: 1; }
+/* ═══════════════════════════════════════════════════════
+   SERVICE CARDS  (enhanced hover)
+═══════════════════════════════════════════════════════ */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(285px,1fr));gap:18px}
+.card{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:var(--radius);padding:22px;
+  transition:transform .28s cubic-bezier(.34,1.56,.64,1), border-color .25s, box-shadow .28s;
+  position:relative;overflow:hidden;
+  animation:cardIn .4s ease both;
+}
+.card:hover{
+  transform:translateY(-6px) scale(1.012);
+  border-color:rgba(244,197,66,.3);
+  box-shadow:var(--shadow-hover),0 0 0 1px rgba(244,197,66,.1);
+}
+[data-theme="light"] .card:hover{
+  box-shadow:0 16px 48px rgba(0,0,0,.12),0 0 0 1px rgba(212,160,23,.2);
+}
+/* Animated top-border glow */
+.card::before{
+  content:'';position:absolute;top:0;left:0;right:0;height:2px;
+  background:linear-gradient(90deg,var(--accent),#ffb700,transparent);
+  opacity:0;transition:opacity .25s;
+}
+.card:hover::before{opacity:1}
+/* Subtle inner glow on hover */
+.card::after{
+  content:'';position:absolute;inset:0;border-radius:var(--radius);
+  background:radial-gradient(ellipse at top,rgba(244,197,66,.04),transparent 70%);
+  opacity:0;transition:opacity .3s;pointer-events:none;
+}
+.card:hover::after{opacity:1}
 
-  .card-top {
-    display: flex; align-items: flex-start; justify-content: space-between;
-    margin-bottom: 14px;
-  }
-  .card-icon {
-    width: 42px; height: 42px; border-radius: 10px;
-    background: rgba(244,197,66,.1);
-    display: flex; align-items: center; justify-content: center;
-    font-size: 20px;
-    flex-shrink: 0;
-  }
-  .card-badge {
-    font-size: 11px; font-weight: 500;
-    padding: 3px 9px; border-radius: 20px;
-    border: 1px solid var(--border);
-    color: var(--muted);
-  }
-  .card-name {
-    font-family: var(--font-head);
-    font-size: 1.05rem; font-weight: 700;
-    margin-bottom: 5px; line-height: 1.3;
-  }
-  .card-provider {
-    font-size: 12.5px; color: var(--muted);
-    margin-bottom: 12px;
-    display: flex; align-items: center; gap: 5px;
-  }
-  .card-desc {
-    font-size: 13px; color: #9ca3b0; line-height: 1.6;
-    margin-bottom: 16px;
-  }
-  .card-footer {
-    display: flex; align-items: center; justify-content: space-between;
-    padding-top: 14px; border-top: 1px solid var(--border);
-  }
-  .price {
-    font-family: var(--font-head);
-    font-size: 1.25rem; font-weight: 700;
-    color: var(--accent);
-  }
-  .price sub { font-size: 13px; font-weight: 400; color: var(--muted); font-family: var(--font-body); }
-  .btn-book {
-    font-family: var(--font-body); font-size: 13px; font-weight: 500;
-    background: rgba(244,197,66,.12);
-    color: var(--accent);
-    border: 1px solid rgba(244,197,66,.25);
-    padding: 7px 16px; border-radius: 8px;
-    cursor: pointer; transition: all .18s;
-  }
-  .btn-book:hover { background: var(--accent); color: #000; border-color: var(--accent); }
-  .btn-delete {
-    position: absolute; top: 14px; right: 48px;
-    background: transparent; border: none; cursor: pointer;
-    color: var(--muted); font-size: 14px; padding: 4px;
-    transition: color .15s;
-    border-radius: 6px;
-  }
-  .btn-delete:hover { color: var(--accent2); background: rgba(232,93,69,.1); }
-  .rating { display: flex; gap: 2px; font-size: 12px; color: var(--accent); }
+.card-top{display:flex;align-items:flex-start;justify-content:space-between;margin-bottom:14px}
+.card-icon{
+  width:44px;height:44px;border-radius:12px;
+  background:linear-gradient(135deg,rgba(244,197,66,.15),rgba(244,197,66,.05));
+  border:1px solid rgba(244,197,66,.15);
+  display:flex;align-items:center;justify-content:center;font-size:20px;
+  transition:transform .25s;
+}
+.card:hover .card-icon{transform:scale(1.1) rotate(-3deg)}
+.card-top-right{display:flex;align-items:center;gap:6px}
+.card-badge{
+  font-size:10.5px;font-weight:600;padding:3px 9px;
+  border-radius:20px;border:1px solid var(--border);color:var(--muted);
+  letter-spacing:.3px;
+}
+/* ── Favourite heart button ── */
+.btn-fav{
+  width:30px;height:30px;border-radius:50%;
+  background:transparent;border:1px solid var(--border);
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  font-size:14px;color:var(--muted);
+  transition:all .2s;
+}
+.btn-fav:hover{border-color:#e85d45;color:#e85d45;background:rgba(232,93,69,.08)}
+.btn-fav.faved{
+  color:#e85d45;border-color:#e85d45;
+  background:rgba(232,93,69,.1);
+  animation:heartPop .35s ease;
+}
+/* ── Owned badge ── */
+.owned-tag{
+  font-size:10px;color:var(--success);
+  background:rgba(52,211,153,.1);border:1px solid rgba(52,211,153,.2);
+  padding:2px 7px;border-radius:20px;font-weight:600;
+}
 
-  /* ─── Empty State ────────────────────────────────────────── */
-  .empty {
-    text-align: center; padding: 4rem 2rem;
-    color: var(--muted); grid-column: 1/-1;
-  }
-  .empty .icon { font-size: 3rem; margin-bottom: 1rem; opacity: .4; }
-  .empty h3 { font-family: var(--font-head); font-size: 1.1rem; color: var(--text); margin-bottom: .4rem; }
+.card-name{font-family:var(--font-head);font-size:1.05rem;font-weight:700;margin-bottom:5px;line-height:1.3;color:var(--text)}
+.card-provider{font-size:12.5px;color:var(--muted);margin-bottom:12px;display:flex;align-items:center;gap:4px}
+.card-desc{font-size:13px;color:var(--text2);line-height:1.65;margin-bottom:14px}
+.card-footer{display:flex;align-items:center;justify-content:space-between;padding-top:14px;border-top:1px solid var(--border2)}
+.price{font-family:var(--font-head);font-size:1.3rem;font-weight:800;color:var(--accent)}
+.price sub{font-size:12px;font-weight:400;color:var(--muted);font-family:var(--font-body)}
 
-  /* ─── Modal Overlay ──────────────────────────────────────── */
-  .overlay {
-    position: fixed; inset: 0; z-index: 200;
-    background: rgba(0,0,0,.7); backdrop-filter: blur(6px);
-    display: flex; align-items: center; justify-content: center;
-    padding: 1rem;
-    opacity: 0; pointer-events: none;
-    transition: opacity .25s;
-  }
-  .overlay.open { opacity: 1; pointer-events: all; }
+.btn-book{
+  font-family:var(--font-body);font-size:13px;font-weight:600;
+  background:linear-gradient(135deg,rgba(244,197,66,.12),rgba(244,197,66,.06));
+  color:var(--accent);
+  border:1px solid rgba(244,197,66,.3);
+  padding:7px 15px;border-radius:8px;cursor:pointer;
+  transition:all .22s cubic-bezier(.34,1.56,.64,1);
+}
+.btn-book:hover{
+  background:linear-gradient(135deg,var(--accent),#ffb700);
+  color:#000;border-color:transparent;
+  transform:translateY(-1px);
+  box-shadow:0 4px 14px var(--accent-glow);
+}
 
-  .modal {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 18px;
-    padding: 2rem;
-    width: 100%; max-width: 480px;
-    transform: translateY(24px) scale(.97);
-    transition: transform .3s cubic-bezier(.34,1.56,.64,1);
-    max-height: 90vh; overflow-y: auto;
-  }
-  .overlay.open .modal { transform: none; }
+.btn-delete{
+  position:absolute;top:14px;right:14px;
+  background:transparent;border:none;cursor:pointer;
+  color:var(--muted);font-size:14px;padding:6px;border-radius:6px;transition:all .18s;
+}
+.btn-delete:hover{color:var(--accent2);background:rgba(232,93,69,.12);transform:scale(1.1)}
 
-  .modal-header {
-    display: flex; align-items: center; justify-content: space-between;
-    margin-bottom: 1.6rem;
-  }
-  .modal-title {
-    font-family: var(--font-head);
-    font-size: 1.15rem; font-weight: 700;
-  }
-  .modal-close {
-    background: var(--card); border: 1px solid var(--border);
-    color: var(--muted); width: 30px; height: 30px;
-    border-radius: 50%; cursor: pointer; font-size: 16px;
-    display: flex; align-items: center; justify-content: center;
-    transition: all .15s;
-  }
-  .modal-close:hover { color: var(--text); border-color: var(--muted); }
+.star-row{display:flex;gap:2px;font-size:12px;color:var(--accent);margin-bottom:12px;align-items:center}
+.rev-count{font-size:11px;color:var(--muted);margin-left:4px}
 
-  .form-group { margin-bottom: 1.1rem; }
-  .form-group label {
-    display: block; font-size: 13px; font-weight: 500;
-    color: var(--muted); margin-bottom: 6px; letter-spacing: .2px;
-  }
-  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+/* ═══════════════════════════════════════════════════════
+   EMPTY STATE
+═══════════════════════════════════════════════════════ */
+.empty{text-align:center;padding:4.5rem 2rem;color:var(--muted);grid-column:1/-1}
+.empty-icon{font-size:3.5rem;margin-bottom:1.2rem;display:block;animation:float 3s ease infinite}
+.empty h3{font-family:var(--font-head);font-size:1.15rem;color:var(--text);margin-bottom:.5rem}
+.empty p{font-size:13.5px;line-height:1.6}
 
-  /* ─── Toast ──────────────────────────────────────────────── */
-  .toast {
-    position: fixed; bottom: 28px; left: 50%; transform: translateX(-50%) translateY(80px);
-    background: var(--surface); border: 1px solid var(--border);
-    color: var(--text); padding: 12px 20px;
-    border-radius: 10px; font-size: 14px;
-    display: flex; align-items: center; gap: 8px;
-    box-shadow: 0 8px 30px rgba(0,0,0,.5);
-    transition: transform .35s cubic-bezier(.34,1.56,.64,1), opacity .35s;
-    z-index: 300; white-space: nowrap;
-  }
-  .toast.show { transform: translateX(-50%) translateY(0); }
-  .toast .t-icon { font-size: 16px; }
+/* ═══════════════════════════════════════════════════════
+   MODALS
+═══════════════════════════════════════════════════════ */
+.overlay{
+  position:fixed;inset:0;z-index:200;
+  background:rgba(0,0,0,.65);backdrop-filter:blur(8px);
+  display:flex;align-items:center;justify-content:center;padding:1rem;
+  opacity:0;pointer-events:none;transition:opacity .28s;
+}
+.overlay.open{opacity:1;pointer-events:all}
+.modal{
+  background:var(--surface);border:1px solid var(--border);
+  border-radius:20px;padding:2rem;width:100%;max-width:480px;
+  transform:translateY(28px) scale(.96);
+  transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  max-height:90vh;overflow-y:auto;
+  box-shadow:0 32px 80px rgba(0,0,0,.4);
+}
+.overlay.open .modal{transform:none}
+.modal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.6rem}
+.modal-title{font-family:var(--font-head);font-size:1.15rem;font-weight:700;color:var(--text)}
+.modal-close{
+  background:var(--card);border:1px solid var(--border);
+  color:var(--muted);width:32px;height:32px;border-radius:50%;cursor:pointer;
+  font-size:15px;display:flex;align-items:center;justify-content:center;transition:all .18s;
+}
+.modal-close:hover{color:var(--text);border-color:var(--muted);transform:rotate(90deg)}
+.form-group{margin-bottom:1.1rem}
+.form-group label{display:block;font-size:13px;font-weight:500;color:var(--muted);margin-bottom:6px;letter-spacing:.2px}
+.form-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 
-  /* ─── Booking Modal ──────────────────────────────────────── */
-  .book-info {
-    background: var(--card); border: 1px solid var(--border);
-    border-radius: 10px; padding: 14px; margin-bottom: 1.2rem;
-  }
-  .book-info .service-name { font-family: var(--font-head); font-weight: 700; margin-bottom: 4px; }
-  .book-info .service-price { color: var(--accent); font-weight: 600; }
+/* ═══════════════════════════════════════════════════════
+   CONFIRM MODAL
+═══════════════════════════════════════════════════════ */
+.confirm-body{text-align:center;padding:.5rem 0 .8rem}
+.confirm-icon{font-size:3rem;margin-bottom:1rem;display:block}
+.confirm-title{font-family:var(--font-head);font-size:1.1rem;font-weight:700;margin-bottom:.5rem;color:var(--text)}
+.confirm-msg{font-size:13.5px;color:var(--muted);line-height:1.6;margin-bottom:1.4rem}
+.confirm-actions{display:flex;gap:10px}
+.confirm-actions .btn{flex:1;padding:12px}
 
-  /* ─── Responsive ─────────────────────────────────────────── */
-  @media (max-width: 600px) {
-    .hero { padding: 3.5rem 1.2rem 2rem; }
-    .search-bar { flex-direction: column; }
-    .stats-row { gap: 1.4rem; }
-    .section { padding: 0 1.2rem 3rem; }
-    .form-row { grid-template-columns: 1fr; }
-    header { padding: 0 1.2rem; }
-  }
+/* ═══════════════════════════════════════════════════════
+   AUTH UI
+═══════════════════════════════════════════════════════ */
+.auth-tabs{display:flex;border-bottom:1px solid var(--border);margin-bottom:1.6rem}
+.auth-tab{
+  flex:1;padding:10px;text-align:center;
+  font-family:var(--font-head);font-size:14px;font-weight:700;
+  color:var(--muted);cursor:pointer;border-bottom:2px solid transparent;
+  transition:all .2s;background:none;border-top:none;border-left:none;border-right:none;
+}
+.auth-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.auth-tab:hover:not(.active){color:var(--text)}
+.auth-divider{text-align:center;font-size:12px;color:var(--muted);margin:1rem 0;position:relative}
+.auth-divider::before,.auth-divider::after{content:'';position:absolute;top:50%;width:40%;height:1px;background:var(--border)}
+.auth-divider::before{left:0}.auth-divider::after{right:0}
+.field-error{font-size:11.5px;color:var(--accent2);margin-top:4px;display:none}
+.field-error.show{display:block;animation:fadeUp .2s ease}
+input.invalid{border-color:var(--accent2)!important;box-shadow:0 0 0 3px rgba(232,93,69,.1)!important}
+.password-wrap{position:relative}
+.toggle-pw{position:absolute;right:12px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:var(--muted);font-size:15px;transition:color .2s}
+.toggle-pw:hover{color:var(--text)}
+.password-wrap input{padding-right:40px}
+.role-select{display:flex;gap:10px;margin-top:4px}
+.role-option{flex:1;padding:13px;border-radius:12px;border:2px solid var(--border);background:var(--card);cursor:pointer;text-align:center;transition:all .2s}
+.role-option:hover{border-color:var(--muted);transform:translateY(-1px)}
+.role-option.selected{border-color:var(--accent);background:rgba(244,197,66,.07);box-shadow:0 0 0 3px var(--accent-glow)}
+.role-option .r-icon{font-size:24px;margin-bottom:5px;display:block}
+.role-option .r-label{font-size:13px;font-weight:600;font-family:var(--font-head);color:var(--text)}
+.role-option .r-desc{font-size:11px;color:var(--muted);margin-top:2px}
+
+/* ═══════════════════════════════════════════════════════
+   AUTH GATE
+═══════════════════════════════════════════════════════ */
+.auth-gate{
+  display:none;
+  background:linear-gradient(135deg,rgba(244,197,66,.06),rgba(244,197,66,.02));
+  border:1px solid rgba(244,197,66,.2);border-radius:12px;
+  padding:15px 20px;margin-bottom:1.4rem;
+  align-items:center;gap:12px;font-size:13px;color:var(--muted);
+}
+.auth-gate.show{display:flex}
+.auth-gate strong{color:var(--text)}
+.auth-gate .gate-btn{margin-left:auto;flex-shrink:0;font-size:12px;padding:7px 14px}
+
+/* ═══════════════════════════════════════════════════════
+   BOOKING / PAYMENT
+═══════════════════════════════════════════════════════ */
+.book-info{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px;margin-bottom:1.2rem;
+  border-left:3px solid var(--accent);
+}
+.book-info .service-name{font-family:var(--font-head);font-weight:700;margin-bottom:4px;color:var(--text)}
+.book-info .service-price{color:var(--accent);font-weight:700;font-size:1.05rem}
+.step-indicator{display:flex;margin-bottom:1.6rem;border-radius:8px;overflow:hidden;background:var(--card);border:1px solid var(--border)}
+.step{
+  flex:1;text-align:center;font-size:12px;font-weight:600;
+  padding:10px 4px;color:var(--muted);
+  border-bottom:2px solid transparent;transition:all .25s;
+}
+.step.active{color:var(--accent);border-bottom-color:var(--accent);background:rgba(244,197,66,.04)}
+.step.done{color:var(--success);border-bottom-color:var(--success)}
+.pay-options{display:flex;flex-direction:column;gap:10px;margin-bottom:1.2rem}
+.pay-option{
+  display:flex;align-items:center;gap:12px;
+  padding:14px 16px;border-radius:12px;
+  border:2px solid var(--border);background:var(--card);
+  cursor:pointer;transition:all .22s;
+}
+.pay-option:hover{border-color:var(--muted);transform:translateY(-1px)}
+.pay-option.selected{border-color:var(--accent);background:rgba(244,197,66,.05);box-shadow:0 0 0 3px var(--accent-glow)}
+.pay-icon{font-size:22px;width:32px;text-align:center}
+.pay-label{font-size:14px;font-weight:600;font-family:var(--font-head);color:var(--text)}
+.pay-sub{font-size:11.5px;color:var(--muted);margin-top:2px}
+.pay-extra{display:none;margin-top:10px}
+.pay-extra.show{display:block;animation:fadeUp .2s ease}
+.pay-result{text-align:center;padding:2rem 1rem}
+.pay-result h3{font-family:var(--font-head);font-size:1.2rem;font-weight:700;margin-bottom:.5rem}
+.pay-result p{font-size:13px;color:var(--muted)}
+.loader{display:inline-block;width:44px;height:44px;border:4px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .75s linear infinite}
+
+/* Animated success checkmark */
+.success-anim{display:flex;justify-content:center;margin-bottom:1rem}
+.success-circle{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(52,211,153,.12);border:2px solid var(--success);
+  display:flex;align-items:center;justify-content:center;
+  animation:scaleIn .5s cubic-bezier(.34,1.56,.64,1);
+}
+.success-check{
+  stroke:var(--success);stroke-width:2.5;fill:none;
+  stroke-dasharray:100;stroke-dashoffset:100;stroke-linecap:round;stroke-linejoin:round;
+  animation:successDraw .6s ease .3s forwards;
+}
+.fail-anim{display:flex;justify-content:center;margin-bottom:1rem}
+.fail-circle{
+  width:72px;height:72px;border-radius:50%;
+  background:rgba(232,93,69,.12);border:2px solid var(--accent2);
+  display:flex;align-items:center;justify-content:center;font-size:2rem;
+  animation:scaleIn .4s cubic-bezier(.34,1.56,.64,1);
+}
+
+/* ═══════════════════════════════════════════════════════
+   BOOKING HISTORY
+═══════════════════════════════════════════════════════ */
+.booking-list{display:flex;flex-direction:column;gap:12px;grid-column:1/-1}
+.booking-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:14px;padding:18px;
+  display:flex;align-items:flex-start;justify-content:space-between;gap:12px;
+  animation:cardIn .35s ease both;
+  transition:border-color .2s,box-shadow .2s;
+}
+.booking-item:hover{border-color:rgba(244,197,66,.15);box-shadow:var(--shadow-card)}
+.b-name{font-family:var(--font-head);font-weight:700;font-size:15px;margin-bottom:3px;color:var(--text)}
+.b-meta{font-size:12px;color:var(--muted);margin-bottom:8px}
+.b-right{display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex-shrink:0}
+.status-badge{font-size:11px;font-weight:700;padding:4px 11px;border-radius:20px;letter-spacing:.4px}
+.s-active{background:rgba(96,165,250,.15);color:var(--info)}
+.s-cancelled{background:rgba(232,93,69,.15);color:var(--accent2)}
+.s-completed{background:rgba(52,211,153,.15);color:var(--success)}
+.refund-note{font-size:11px;color:var(--success);margin-top:4px;animation:pulse 1.8s ease infinite}
+
+/* ═══════════════════════════════════════════════════════
+   REVIEWS
+═══════════════════════════════════════════════════════ */
+.review-list{display:flex;flex-direction:column;gap:12px;max-height:46vh;overflow-y:auto}
+.review-list::-webkit-scrollbar{width:4px}
+.review-list::-webkit-scrollbar-track{background:transparent}
+.review-list::-webkit-scrollbar-thumb{background:var(--border);border-radius:4px}
+.review-item{
+  background:var(--card);border:1px solid var(--border);
+  border-radius:12px;padding:14px;transition:border-color .18s;
+}
+.review-item:hover{border-color:rgba(244,197,66,.15)}
+.review-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.review-author{font-size:13px;font-weight:600;color:var(--text)}
+.review-date{font-size:11px;color:var(--muted)}
+.review-stars{color:var(--accent);font-size:13px;margin-bottom:6px}
+.review-text{font-size:13px;color:var(--text2);line-height:1.6}
+.star-picker{display:flex;gap:8px;margin-top:4px}
+.star-pick{
+  font-size:28px;cursor:pointer;color:var(--border);
+  transition:color .15s,transform .2s cubic-bezier(.34,1.56,.64,1);
+  user-select:none;
+}
+.star-pick:hover~.star-pick{color:var(--border)!important}
+.star-pick:hover,.star-pick.lit{color:var(--accent);transform:scale(1.25)}
+
+/* ═══════════════════════════════════════════════════════
+   PROFILE PANEL  (glassmorphism touch)
+═══════════════════════════════════════════════════════ */
+.profile-panel{
+  background:linear-gradient(135deg,var(--card),var(--card2));
+  border:1px solid var(--border);border-radius:16px;
+  padding:1.5rem;margin-bottom:2rem;display:none;
+  position:relative;overflow:hidden;
+}
+.profile-panel::before{
+  content:'';position:absolute;top:-40px;right:-40px;
+  width:160px;height:160px;border-radius:50%;
+  background:radial-gradient(circle,var(--accent-glow),transparent 70%);
+  pointer-events:none;
+}
+.profile-panel.show{display:flex;gap:1.5rem;align-items:center;flex-wrap:wrap}
+.profile-big-avatar{
+  width:58px;height:58px;border-radius:50%;
+  background:linear-gradient(135deg,var(--accent),#ffb700);
+  color:#000;font-family:var(--font-head);font-weight:800;font-size:22px;
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  box-shadow:0 0 0 4px var(--accent-glow);
+}
+.profile-name{font-family:var(--font-head);font-size:1.1rem;font-weight:800;margin-bottom:3px;color:var(--text)}
+.profile-email{font-size:12.5px;color:var(--muted);margin-bottom:8px}
+.profile-stats{display:flex;gap:1.5rem}
+.p-stat-num{
+  font-family:var(--font-head);font-weight:800;font-size:1.15rem;
+  background:linear-gradient(135deg,var(--accent),#ffb700);
+  -webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;
+}
+.p-stat-label{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* ═══════════════════════════════════════════════════════
+   TOAST  (improved)
+═══════════════════════════════════════════════════════ */
+.toast{
+  position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(80px);
+  background:var(--surface);border:1px solid var(--border);
+  color:var(--text);padding:13px 22px;border-radius:12px;font-size:14px;
+  display:flex;align-items:center;gap:10px;
+  box-shadow:0 12px 40px rgba(0,0,0,.4);
+  transition:transform .4s cubic-bezier(.34,1.56,.64,1),opacity .3s;
+  z-index:450;max-width:90vw;
+}
+@media(min-width:768px){.toast{bottom:28px}}
+.toast.show{transform:translateX(-50%) translateY(0)}
+
+/* ═══════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV
+═══════════════════════════════════════════════════════ */
+.bottom-nav{
+  display:none;
+  position:fixed;bottom:0;left:0;right:0;z-index:300;
+  background:var(--glass-bg);backdrop-filter:blur(20px);
+  border-top:1px solid var(--border);
+  height:64px;align-items:center;
+  padding:0 1rem;
+  box-shadow:0 -8px 30px rgba(0,0,0,.2);
+}
+@media(max-width:767px){.bottom-nav{display:flex}}
+.bn-item{
+  flex:1;display:flex;flex-direction:column;align-items:center;
+  gap:3px;font-size:10px;font-weight:500;color:var(--muted);
+  cursor:pointer;padding:8px 4px;border-radius:10px;
+  transition:all .2s;background:none;border:none;
+  min-height:48px;justify-content:center;
+}
+.bn-item.active{color:var(--accent)}
+.bn-item:hover{color:var(--text)}
+.bn-icon{font-size:20px;line-height:1;transition:transform .2s}
+.bn-item.active .bn-icon{transform:scale(1.15)}
+
+/* ═══════════════════════════════════════════════════════
+   RESPONSIVE
+═══════════════════════════════════════════════════════ */
+@media(max-width:767px){
+  .hero{padding:4rem 1.2rem 2.5rem}
+  .hero h1{letter-spacing:-1px}
+  .search-bar{flex-direction:column;margin-bottom:2rem}
+  .form-row{display:flex;flex-direction:column}
+  .stats-row{gap:1.6rem}
+  .section{padding:0 1.2rem 5rem}
+  header{padding:0 1.2rem}
+  .header-actions .btn span{display:none}
+  .booking-item{flex-direction:column}
+  .b-right{flex-direction:row;flex-wrap:wrap}
+  .profile-panel{flex-direction:column;align-items:flex-start}
+  .nav-tabs{display:none!important} /* replaced by bottom nav on mobile */
+  .pills{overflow-x:auto;flex-wrap:nowrap;padding-bottom:4px}
+  .pills::-webkit-scrollbar{height:0}
+  .filter-row{flex-direction:column;align-items:flex-start}
+  .rating-filter{width:100%}
+}
+@media(min-width:768px){
+  .bottom-nav{display:none!important}
+}
 </style>
 </head>
 <body>
 
-<!-- ── Header ── -->
-<header>
-  <div class="logo">
-    🏘️ Neighbour<span class="dot">Hub</span>
-    <span class="badge">BETA</span>
-  </div>
-  <div class="header-actions" id="headerActions">
-    <!-- Populated by JS based on auth state -->
-  </div>
-</header>
-
-<!-- ── Hero ── -->
-<div class="hero">
-  <div class="hero-eyebrow">📍 Hyperlocal • Trusted • Fast</div>
-  <h1>Find <em>Local Services</em><br/>In Your Neighbourhood</h1>
-  <p>From plumbers to tutors — discover trusted professionals near you, book instantly, get it done.</p>
+<!-- ════════ OFFLINE BANNER ════════ -->
+<div class="offline-banner" id="offlineBanner">
+  📡 You're offline — showing cached data. Some features may be limited.
 </div>
 
-<!-- ── Search ── -->
+<!-- ════════ HEADER ════════ -->
+<header>
+  <div class="logo">🏘️ Neighbour<span class="dot">Hub</span><span class="badge">BETA</span></div>
+  <div class="header-actions" id="headerActions"></div>
+</header>
+
+<!-- ════════ HERO ════════ -->
+<div class="hero">
+  <div class="hero-glow"></div>
+  <div class="hero-eyebrow">📍 Hyperlocal · Trusted · Fast</div>
+  <h1>Find <em>Local Services</em><br/>In Your Neighbourhood</h1>
+  <p>From plumbers to tutors — discover trusted professionals, book instantly, pay securely.</p>
+</div>
+
+<!-- ════════ MAIN ════════ -->
 <div class="section">
+
+  <!-- Search + Sort -->
   <div class="search-bar">
     <div class="search-wrap">
       <span class="icon">🔍</span>
-      <input type="text" id="searchInput" placeholder="Search services, providers..." oninput="renderCards()"/>
+      <input type="text" id="searchInput" placeholder="Search services, providers, areas…"
+        oninput="onSearchInput()" onfocus="showSuggestions()" autocomplete="off"/>
+      <button class="search-clear" id="searchClear" onclick="clearSearch()">✕</button>
+      <div class="suggestions" id="suggestionsBox"></div>
     </div>
-    <select id="sortSelect" onchange="renderCards()" style="width:150px">
-      <option value="newest">Newest</option>
-      <option value="price-asc">Price: Low→High</option>
-      <option value="price-desc">Price: High→Low</option>
-      <option value="name">Name A–Z</option>
+    <select id="sortSelect" onchange="renderActiveTab()" style="width:165px">
+      <option value="newest">✨ Newest</option>
+      <option value="price-asc">↑ Price Low</option>
+      <option value="price-desc">↓ Price High</option>
+      <option value="name">A–Z Name</option>
+      <option value="rating">⭐ Top Rated</option>
     </select>
   </div>
 
-  <!-- Category Pills -->
-  <div class="pills" id="pillsRow">
-    <button class="pill active" onclick="filterCat('All', this)">All</button>
-    <button class="pill" onclick="filterCat('Plumbing', this)">🔧 Plumbing</button>
-    <button class="pill" onclick="filterCat('Electrical', this)">⚡ Electrical</button>
-    <button class="pill" onclick="filterCat('Tutoring', this)">📚 Tutoring</button>
-    <button class="pill" onclick="filterCat('Delivery', this)">🚚 Delivery</button>
-    <button class="pill" onclick="filterCat('Cleaning', this)">🧹 Cleaning</button>
-    <button class="pill" onclick="filterCat('Carpentry', this)">🪚 Carpentry</button>
-    <button class="pill" onclick="filterCat('Other', this)">✨ Other</button>
+  <!-- Category Pills + Rating Filter -->
+  <div class="filter-row">
+    <div class="pills" id="pillsRow">
+      <button class="pill active" onclick="filterCat('All',this)">All</button>
+      <button class="pill" onclick="filterCat('Plumbing',this)">🔧 Plumbing</button>
+      <button class="pill" onclick="filterCat('Electrical',this)">⚡ Electrical</button>
+      <button class="pill" onclick="filterCat('Tutoring',this)">📚 Tutoring</button>
+      <button class="pill" onclick="filterCat('Delivery',this)">🚚 Delivery</button>
+      <button class="pill" onclick="filterCat('Cleaning',this)">🧹 Cleaning</button>
+      <button class="pill" onclick="filterCat('Carpentry',this)">🪚 Carpentry</button>
+      <button class="pill" onclick="filterCat('Other',this)">✨ Other</button>
+    </div>
+    <div class="rating-filter">
+      <span>⭐ Min rating:</span>
+      <select id="ratingFilter" onchange="renderActiveTab()" style="width:90px">
+        <option value="0">Any</option>
+        <option value="3">3★+</option>
+        <option value="4">4★+</option>
+        <option value="4.5">4.5★+</option>
+      </select>
+    </div>
   </div>
 
   <!-- Stats -->
-  <div class="stats-row" id="statsRow">
+  <div class="stats-row">
     <div class="stat"><div class="stat-num" id="statTotal">0</div><div class="stat-label">Services Listed</div></div>
     <div class="stat"><div class="stat-num" id="statCat">0</div><div class="stat-label">Categories</div></div>
     <div class="stat"><div class="stat-num" id="statBooked">0</div><div class="stat-label">Bookings Made</div></div>
+    <div class="stat"><div class="stat-num" id="statFavs">0</div><div class="stat-label">Favourites</div></div>
   </div>
 
-  <!-- Auth gate banner -->
+  <!-- Profile Panel -->
+  <div class="profile-panel" id="profilePanel"></div>
+
+  <!-- Desktop Nav Tabs -->
+  <div class="nav-tabs" id="navTabs" style="display:none">
+    <button class="nav-tab active" id="tab-services" onclick="switchMainTab('services')">🏠 All Services</button>
+    <button class="nav-tab"        id="tab-bookings" onclick="switchMainTab('bookings')">📦 My Bookings</button>
+    <button class="nav-tab"        id="tab-mine"     onclick="switchMainTab('mine')">🛠 My Services</button>
+    <button class="nav-tab"        id="tab-favs"     onclick="switchMainTab('favs')">❤️ Favourites</button>
+  </div>
+
+  <!-- Auth Gate -->
   <div class="auth-gate" id="authGate">
-    🔒 <span><strong>Sign in</strong> to list services or book appointments</span>
+    🔒 <span><strong>Sign in</strong> to book services, list your own, and track history</span>
     <button class="btn btn-primary gate-btn" onclick="openAuthModal('login')">Sign In</button>
   </div>
 
-  <!-- Section header -->
+  <!-- Section Header -->
   <div class="section-header">
     <div class="section-title">
-      Available Services
+      <span id="sectionTitleText">Available Services</span>
       <span class="count" id="resultCount">0 found</span>
     </div>
     <span style="font-size:12px;color:var(--muted)" id="filterLabel"></span>
   </div>
 
-  <!-- Cards Grid -->
-  <div class="grid" id="cardsGrid"></div>
+  <!-- Cards Grid (skeleton or real cards) -->
+  <div id="cardsWrapper">
+    <!-- Skeleton shown on first load -->
+    <div class="skeleton-grid" id="skeletonGrid">
+      ${[...Array(6)].map(()=>`
+      <div class="skeleton-card">
+        <div class="skel skel-icon"></div>
+        <div class="skel skel-title"></div>
+        <div class="skel skel-sub"></div>
+        <div class="skel skel-line short"></div>
+        <div class="skel skel-line shorter"></div>
+        <div class="skel-footer"><div class="skel skel-price"></div><div class="skel skel-btn"></div></div>
+      </div>`).join('')}
+    </div>
+    <div class="grid" id="cardsGrid" style="display:none"></div>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- Add Service Modal -->
-<!-- ═══════════════════════════════════════════════════ -->
+<!-- ════════ MOBILE BOTTOM NAV ════════ -->
+<nav class="bottom-nav" id="bottomNav">
+  <button class="bn-item active" id="bn-services" onclick="switchMainTab('services')">
+    <span class="bn-icon">🏠</span><span>Services</span>
+  </button>
+  <button class="bn-item" id="bn-bookings" onclick="switchMainTab('bookings')">
+    <span class="bn-icon">📦</span><span>Bookings</span>
+  </button>
+  <button class="bn-item" id="bn-mine" onclick="switchMainTab('mine')">
+    <span class="bn-icon">🛠</span><span>My Services</span>
+  </button>
+  <button class="bn-item" id="bn-favs" onclick="switchMainTab('favs')">
+    <span class="bn-icon">❤️</span><span>Favourites</span>
+  </button>
+</nav>
+
+<!-- ════════ MODAL: CONFIRM ════════ -->
+<div class="overlay" id="confirmOverlay" onclick="closeIfBg(event,'confirmOverlay')">
+  <div class="modal" style="max-width:400px">
+    <div class="confirm-body" id="confirmBody"></div>
+  </div>
+</div>
+
+<!-- ════════ MODAL: ADD SERVICE ════════ -->
 <div class="overlay" id="addOverlay" onclick="closeIfBg(event,'addOverlay')">
   <div class="modal">
     <div class="modal-header">
       <div class="modal-title">List a New Service</div>
       <button class="modal-close" onclick="closeModal('addOverlay')">✕</button>
     </div>
-
-    <div class="form-group">
-      <label>Service Name *</label>
-      <input type="text" id="fName" placeholder="e.g. Pipe Leak Repair"/>
-    </div>
+    <div class="form-group"><label>Service Name *</label><input type="text" id="fName" placeholder="e.g. Pipe Leak Repair"/></div>
     <div class="form-row">
-      <div class="form-group">
-        <label>Category *</label>
-        <select id="fCategory">
-          <option value="">Select...</option>
-          <option>Plumbing</option><option>Electrical</option>
-          <option>Tutoring</option><option>Delivery</option>
-          <option>Cleaning</option><option>Carpentry</option><option>Other</option>
-        </select>
+      <div class="form-group"><label>Category *</label>
+        <select id="fCategory"><option value="">Select…</option><option>Plumbing</option><option>Electrical</option><option>Tutoring</option><option>Delivery</option><option>Cleaning</option><option>Carpentry</option><option>Other</option></select>
       </div>
-      <div class="form-group">
-        <label>Price (₹) *</label>
-        <input type="number" id="fPrice" placeholder="500" min="0"/>
-      </div>
+      <div class="form-group"><label>Price (₹) *</label><input type="number" id="fPrice" placeholder="500" min="0"/></div>
     </div>
-    <div class="form-group">
-      <label>Provider / Your Name *</label>
-      <input type="text" id="fProvider" placeholder="e.g. Ravi Kumar"/>
-    </div>
-    <div class="form-group">
-      <label>Short Description</label>
-      <textarea id="fDesc" rows="2" placeholder="What do you offer? Any speciality..."></textarea>
-    </div>
+    <div class="form-group"><label>Provider / Your Name *</label><input type="text" id="fProvider" placeholder="e.g. Ravi Kumar"/></div>
+    <div class="form-group"><label>Short Description</label><textarea id="fDesc" rows="2" placeholder="What do you offer?"></textarea></div>
     <div class="form-row">
-      <div class="form-group">
-        <label>Phone Number</label>
-        <input type="text" id="fPhone" placeholder="+91 98765 43210"/>
-      </div>
-      <div class="form-group">
-        <label>Location / Area</label>
-        <input type="text" id="fLocation" placeholder="e.g. Koramangala"/>
-      </div>
+      <div class="form-group"><label>Phone</label><input type="text" id="fPhone" placeholder="+91 98765…"/></div>
+      <div class="form-group"><label>Area / Location</label><input type="text" id="fLocation" placeholder="e.g. Koramangala"/></div>
     </div>
-
-    <button class="btn btn-primary" style="width:100%;margin-top:6px;padding:13px;font-size:15px" onclick="addService()">
-      🚀 Publish Service
-    </button>
+    <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;margin-top:6px" onclick="addService()">🚀 Publish Service</button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- Booking Modal -->
-<!-- ═══════════════════════════════════════════════════ -->
+<!-- ════════ MODAL: BOOKING + PAYMENT ════════ -->
 <div class="overlay" id="bookOverlay" onclick="closeIfBg(event,'bookOverlay')">
-  <div class="modal">
+  <div class="modal" style="max-width:500px">
     <div class="modal-header">
-      <div class="modal-title">Book Service</div>
+      <div class="modal-title" id="bookModalTitle">Book Service</div>
       <button class="modal-close" onclick="closeModal('bookOverlay')">✕</button>
     </div>
-
-    <div class="book-info" id="bookInfo"></div>
-
-    <div class="form-group">
-      <label>Your Name *</label>
-      <input type="text" id="bName" placeholder="Full name"/>
+    <div class="step-indicator">
+      <div class="step active" id="step1ind">1 · Details</div>
+      <div class="step"        id="step2ind">2 · Payment</div>
+      <div class="step"        id="step3ind">3 · Status</div>
     </div>
-    <div class="form-row">
-      <div class="form-group">
-        <label>Phone *</label>
-        <input type="text" id="bPhone" placeholder="+91..."/>
+    <!-- Step 1 -->
+    <div id="bookStep1">
+      <div class="book-info" id="bookInfo"></div>
+      <div class="form-group"><label>Your Name *</label><input type="text" id="bName" placeholder="Full name"/></div>
+      <div class="form-row">
+        <div class="form-group"><label>Phone *</label><input type="text" id="bPhone" placeholder="+91…"/></div>
+        <div class="form-group"><label>Preferred Date/Time</label><input type="text" id="bDate" placeholder="e.g. Tomorrow 10AM"/></div>
       </div>
-      <div class="form-group">
-        <label>Preferred Date</label>
-        <input type="text" id="bDate" placeholder="e.g. Tomorrow 10 AM"/>
+      <div class="form-group"><label>Address / Notes</label><textarea id="bNote" rows="2" placeholder="Your address or any notes…"></textarea></div>
+      <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px" onclick="goToPayment()">Next: Payment →</button>
+    </div>
+    <!-- Step 2 -->
+    <div id="bookStep2" style="display:none">
+      <div class="book-info" id="payInfo"></div>
+      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px">Choose Payment Method</div>
+      <div class="pay-options">
+        <div class="pay-option selected" onclick="selectPay(this,'upi')"><div class="pay-icon">📲</div><div><div class="pay-label">UPI</div><div class="pay-sub">GPay, PhonePe, Paytm</div></div></div>
+        <div class="pay-option" onclick="selectPay(this,'card')"><div class="pay-icon">💳</div><div><div class="pay-label">Card</div><div class="pay-sub">Debit / Credit Card</div></div></div>
+        <div class="pay-option" onclick="selectPay(this,'cash')"><div class="pay-icon">💵</div><div><div class="pay-label">Cash on Service</div><div class="pay-sub">Pay when work is done</div></div></div>
       </div>
+      <div class="pay-extra show" id="upiExtra"><div class="form-group"><label>UPI ID *</label><input type="text" id="upiId" placeholder="yourname@upi"/></div></div>
+      <div class="pay-extra" id="cardExtra">
+        <div class="form-group"><label>Card Number *</label><input type="text" id="cardNum" placeholder="1234 5678 9012 3456" maxlength="19"/></div>
+        <div class="form-row">
+          <div class="form-group"><label>Expiry</label><input type="text" id="cardExp" placeholder="MM/YY" maxlength="5"/></div>
+          <div class="form-group"><label>CVV</label><input type="text" id="cardCvv" placeholder="123" maxlength="3"/></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;margin-top:6px" onclick="processPayment()">💸 Pay Now</button>
+      <button class="btn btn-ghost" style="width:100%;padding:10px;font-size:13px;margin-top:8px" onclick="goToStep(1)">← Back</button>
     </div>
-    <div class="form-group">
-      <label>Address / Notes</label>
-      <textarea id="bNote" rows="2" placeholder="Your address or any notes for the provider..."></textarea>
+    <!-- Step 3 -->
+    <div id="bookStep3" style="display:none">
+      <div class="pay-result" id="payResult"></div>
+      <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;display:none" id="payResultBtn" onclick="finishBooking()">Done</button>
     </div>
-    <button class="btn btn-primary" style="width:100%;margin-top:6px;padding:13px;font-size:15px" onclick="confirmBooking()">
-      ✅ Confirm Booking
-    </button>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════ -->
-<!-- Auth Modal (Login / Signup) -->
-<!-- ═══════════════════════════════════════════════════ -->
+<!-- ════════ MODAL: REVIEWS ════════ -->
+<div class="overlay" id="reviewOverlay" onclick="closeIfBg(event,'reviewOverlay')">
+  <div class="modal" style="max-width:520px">
+    <div class="modal-header">
+      <div class="modal-title" id="reviewModalTitle">Reviews</div>
+      <button class="modal-close" onclick="closeModal('reviewOverlay')">✕</button>
+    </div>
+    <div id="writeReviewSection">
+      <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:8px">✍️ Write a Review</div>
+      <div class="form-group">
+        <label>Your Rating</label>
+        <div class="star-picker" id="starPicker">
+          <span class="star-pick" onclick="pickStar(1)" onmouseover="hoverStar(1)" onmouseout="unhoverStar()">★</span>
+          <span class="star-pick" onclick="pickStar(2)" onmouseover="hoverStar(2)" onmouseout="unhoverStar()">★</span>
+          <span class="star-pick" onclick="pickStar(3)" onmouseover="hoverStar(3)" onmouseout="unhoverStar()">★</span>
+          <span class="star-pick" onclick="pickStar(4)" onmouseover="hoverStar(4)" onmouseout="unhoverStar()">★</span>
+          <span class="star-pick" onclick="pickStar(5)" onmouseover="hoverStar(5)" onmouseout="unhoverStar()">★</span>
+        </div>
+      </div>
+      <div class="form-group"><label>Your Review</label><textarea id="reviewText" rows="2" placeholder="Share your experience…"></textarea></div>
+      <button class="btn btn-primary btn-sm" onclick="submitReview()">Submit Review</button>
+    </div>
+    <div style="margin:1.2rem 0;border-top:1px solid var(--border)"></div>
+    <div style="font-size:13px;font-weight:600;color:var(--muted);margin-bottom:10px" id="reviewCountLabel">Reviews</div>
+    <div class="review-list" id="reviewList"></div>
+    <div id="noReviews" style="display:none;text-align:center;padding:2rem;color:var(--muted)">
+      <div style="font-size:2.5rem;margin-bottom:.6rem">💬</div>
+      <div style="font-family:var(--font-head);font-weight:700;color:var(--text)">No reviews yet</div>
+      <div style="font-size:13px;margin-top:4px">Be the first to review!</div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════ MODAL: AUTH ════════ -->
 <div class="overlay" id="authOverlay" onclick="closeIfBg(event,'authOverlay')">
-  <div class="modal" style="max-width:420px">
+  <div class="modal" style="max-width:430px">
     <div class="modal-header">
       <div class="modal-title" id="authModalTitle">Welcome Back</div>
       <button class="modal-close" onclick="closeModal('authOverlay')">✕</button>
     </div>
-
-    <!-- Tabs -->
     <div class="auth-tabs">
-      <button class="auth-tab active" id="tabLogin"  onclick="switchTab('login')">Sign In</button>
-      <button class="auth-tab"        id="tabSignup" onclick="switchTab('signup')">Create Account</button>
+      <button class="auth-tab active" id="tabLogin"  onclick="switchAuthTab('login')">Sign In</button>
+      <button class="auth-tab"        id="tabSignup" onclick="switchAuthTab('signup')">Create Account</button>
     </div>
-
-    <!-- ── Login Form ── -->
+    <!-- LOGIN -->
     <div id="loginForm">
-      <div class="form-group">
-        <label>Email Address *</label>
-        <input type="text" id="lEmail" placeholder="you@example.com" oninput="clearErr('lEmail','lEmailErr')"/>
-        <div class="field-error" id="lEmailErr"></div>
-      </div>
-      <div class="form-group">
-        <label>Password *</label>
-        <div class="password-wrap">
-          <input type="password" id="lPassword" placeholder="Your password" oninput="clearErr('lPassword','lPwErr')"/>
-          <button class="toggle-pw" onclick="togglePw('lPassword',this)" type="button">👁</button>
-        </div>
+      <div class="form-group"><label>Email *</label><input type="text" id="lEmail" placeholder="you@example.com" oninput="clearErr('lEmail','lEmailErr')"/><div class="field-error" id="lEmailErr"></div></div>
+      <div class="form-group"><label>Password *</label>
+        <div class="password-wrap"><input type="password" id="lPassword" placeholder="Your password" oninput="clearErr('lPassword','lPwErr')"/><button class="toggle-pw" onclick="togglePw('lPassword',this)" type="button">👁</button></div>
         <div class="field-error" id="lPwErr"></div>
       </div>
-      <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;margin-top:6px" onclick="doLogin()">
-        → Sign In
-      </button>
+      <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;margin-top:6px" onclick="doLogin()">→ Sign In</button>
       <div class="auth-divider">or</div>
-      <button class="btn btn-ghost" style="width:100%;padding:11px;font-size:13px" onclick="switchTab('signup')">
-        Don't have an account? Sign Up
-      </button>
+      <button class="btn btn-ghost" style="width:100%;padding:11px;font-size:13px" onclick="switchAuthTab('signup')">Don't have an account? Sign Up</button>
     </div>
-
-    <!-- ── Signup Form ── -->
+    <!-- SIGNUP -->
     <div id="signupForm" style="display:none">
-      <div class="form-group">
-        <label>Full Name *</label>
-        <input type="text" id="sName" placeholder="Your full name" oninput="clearErr('sName','sNameErr')"/>
-        <div class="field-error" id="sNameErr"></div>
-      </div>
-      <div class="form-group">
-        <label>Email Address *</label>
-        <input type="text" id="sEmail" placeholder="you@example.com" oninput="clearErr('sEmail','sEmailErr')"/>
-        <div class="field-error" id="sEmailErr"></div>
-      </div>
-      <div class="form-group">
-        <label>Password * <span style="color:var(--muted);font-weight:400">(min 6 characters)</span></label>
-        <div class="password-wrap">
-          <input type="password" id="sPassword" placeholder="Create a password" oninput="clearErr('sPassword','sPwErr')"/>
-          <button class="toggle-pw" onclick="togglePw('sPassword',this)" type="button">👁</button>
-        </div>
+      <div class="form-group"><label>Full Name *</label><input type="text" id="sName" placeholder="Your full name" oninput="clearErr('sName','sNameErr')"/><div class="field-error" id="sNameErr"></div></div>
+      <div class="form-group"><label>Email *</label><input type="text" id="sEmail" placeholder="you@example.com" oninput="clearErr('sEmail','sEmailErr')"/><div class="field-error" id="sEmailErr"></div></div>
+      <div class="form-group"><label>Password * <span style="color:var(--muted);font-weight:400">(min 6 chars)</span></label>
+        <div class="password-wrap"><input type="password" id="sPassword" placeholder="Create a password" oninput="clearErr('sPassword','sPwErr')"/><button class="toggle-pw" onclick="togglePw('sPassword',this)" type="button">👁</button></div>
         <div class="field-error" id="sPwErr"></div>
       </div>
-      <div class="form-group">
-        <label>Confirm Password *</label>
-        <div class="password-wrap">
-          <input type="password" id="sConfirm" placeholder="Repeat password" oninput="clearErr('sConfirm','sConfErr')"/>
-          <button class="toggle-pw" onclick="togglePw('sConfirm',this)" type="button">👁</button>
-        </div>
+      <div class="form-group"><label>Confirm Password *</label>
+        <div class="password-wrap"><input type="password" id="sConfirm" placeholder="Repeat password" oninput="clearErr('sConfirm','sConfErr')"/><button class="toggle-pw" onclick="togglePw('sConfirm',this)" type="button">👁</button></div>
         <div class="field-error" id="sConfErr"></div>
       </div>
-      <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;margin-top:6px" onclick="doSignup()">
-        🚀 Create Account
-      </button>
+      <div class="form-group">
+        <label>I am a… *</label>
+        <div class="role-select">
+          <div class="role-option selected" id="roleCustomer" onclick="selectRole('customer')"><span class="r-icon">👤</span><div class="r-label">Customer</div><div class="r-desc">Book services</div></div>
+          <div class="role-option"           id="roleWorker"   onclick="selectRole('worker')">  <span class="r-icon">🔧</span><div class="r-label">Worker</div>  <div class="r-desc">Offer services</div></div>
+        </div>
+      </div>
+      <button class="btn btn-primary" style="width:100%;padding:13px;font-size:15px;margin-top:6px" onclick="doSignup()">🚀 Create Account</button>
       <div class="auth-divider">or</div>
-      <button class="btn btn-ghost" style="width:100%;padding:11px;font-size:13px" onclick="switchTab('login')">
-        Already have an account? Sign In
-      </button>
+      <button class="btn btn-ghost" style="width:100%;padding:11px;font-size:13px" onclick="switchAuthTab('login')">Already have an account? Sign In</button>
     </div>
   </div>
 </div>
 
-<!-- Toast -->
-<div class="toast" id="toast"><span class="t-icon" id="toastIcon">✅</span><span id="toastMsg"></span></div>
+<!-- TOAST -->
+<div class="toast" id="toast"><span id="toastIcon">✅</span><span id="toastMsg"></span></div>
 
-<!-- ════════════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════════════════
+     JAVASCRIPT
+══════════════════════════════════════════════════════════ -->
 <script>
-/* ════════════════════════════════════════════════════════
-   AUTH SYSTEM
-   ════════════════════════════════════════════════════════ */
+'use strict';
 
-/* ── Auth state ── */
-let currentUser = JSON.parse(sessionStorage.getItem('nhub_session') || 'null');
+/* ═══════════════════════════════════════════════════════════
+   CONSTANTS
+═══════════════════════════════════════════════════════════ */
+const CAT_ICONS={Plumbing:'🔧',Electrical:'⚡',Tutoring:'📚',Delivery:'🚚',Cleaning:'🧹',Carpentry:'🪚',Other:'✨'};
+const $=id=>document.getElementById(id);
 
-/* ── Open auth modal ── */
-function openAuthModal(tab = 'login') {
-  switchTab(tab);
-  document.getElementById('authOverlay').classList.add('open');
+function uid(){return Math.random().toString(36).slice(2,9)+Date.now().toString(36)}
+function fmtDate(ts){return new Date(ts).toLocaleDateString('en-IN',{day:'numeric',month:'short',year:'numeric'})}
+function starsHtml(n,total=5){n=Math.round(n||0);return'★'.repeat(n)+'☆'.repeat(total-n)}
+
+/* ═══════════════════════════════════════════════════════════
+   DARK / LIGHT MODE TOGGLE
+═══════════════════════════════════════════════════════════ */
+let isDark = localStorage.getItem('nhub_theme') !== 'light';
+
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', isDark ? 'dark' : 'light');
+  const btn = $('themeToggle');
+  if (btn) btn.textContent = isDark ? '☀️' : '🌙';
+}
+function toggleTheme() {
+  isDark = !isDark;
+  localStorage.setItem('nhub_theme', isDark ? 'dark' : 'light');
+  applyTheme();
+}
+applyTheme();
+
+/* ═══════════════════════════════════════════════════════════
+   OFFLINE DETECTION
+═══════════════════════════════════════════════════════════ */
+function updateOnlineStatus() {
+  const offline = !navigator.onLine;
+  $('offlineBanner').classList.toggle('show', offline);
+  document.body.classList.toggle('offline', offline);
+}
+window.addEventListener('online',  updateOnlineStatus);
+window.addEventListener('offline', updateOnlineStatus);
+updateOnlineStatus();
+
+/* ═══════════════════════════════════════════════════════════
+   RIPPLE ON BUTTONS
+═══════════════════════════════════════════════════════════ */
+document.addEventListener('click', e => {
+  const btn = e.target.closest('.btn, .btn-book, .pill');
+  if (!btn) return;
+  const r = document.createElement('span');
+  r.className = 'ripple-effect';
+  const rect = btn.getBoundingClientRect();
+  r.style.left = (e.clientX - rect.left) + 'px';
+  r.style.top  = (e.clientY - rect.top)  + 'px';
+  btn.appendChild(r);
+  setTimeout(() => r.remove(), 600);
+});
+
+/* ═══════════════════════════════════════════════════════════
+   TOAST
+═══════════════════════════════════════════════════════════ */
+function showToast(icon, msg) {
+  $('toastIcon').textContent = icon;
+  $('toastMsg').textContent  = msg;
+  $('toast').classList.add('show');
+  clearTimeout(window._tt);
+  window._tt = setTimeout(() => $('toast').classList.remove('show'), 3600);
 }
 
-/* ── Switch Login / Signup tab ── */
-function switchTab(tab) {
-  const isLogin = tab === 'login';
-  document.getElementById('loginForm').style.display  = isLogin ? '' : 'none';
-  document.getElementById('signupForm').style.display = isLogin ? 'none' : '';
-  document.getElementById('tabLogin').classList.toggle('active', isLogin);
-  document.getElementById('tabSignup').classList.toggle('active', !isLogin);
-  document.getElementById('authModalTitle').textContent = isLogin ? 'Welcome Back' : 'Create Account';
-  // Clear fields on switch
-  ['lEmail','lPassword','sName','sEmail','sPassword','sConfirm'].forEach(id => {
-    const el = document.getElementById(id); if (el) el.value = '';
-  });
-  ['lEmailErr','lPwErr','sNameErr','sEmailErr','sPwErr','sConfErr'].forEach(id => hideErr(id));
-}
-
-/* ── Validation helpers ── */
-function isValidEmail(e) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e); }
-function showErr(inputId, errId, msg) {
-  const inp = document.getElementById(inputId);
-  const err = document.getElementById(errId);
-  if (inp) inp.classList.add('invalid');
-  if (err) { err.textContent = msg; err.classList.add('show'); }
-  return false;
-}
-function hideErr(errId) {
-  const err = document.getElementById(errId); if (err) err.classList.remove('show');
-}
-function clearErr(inputId, errId) {
-  document.getElementById(inputId)?.classList.remove('invalid');
-  hideErr(errId);
-}
-
-/* ── Toggle password visibility ── */
-function togglePw(inputId, btn) {
-  const inp = document.getElementById(inputId);
-  if (inp.type === 'password') { inp.type = 'text'; btn.textContent = '🙈'; }
-  else { inp.type = 'password'; btn.textContent = '👁'; }
-}
-
-/* ── Get users from localStorage ── */
-function getUsers() { return JSON.parse(localStorage.getItem('nhub_users') || '[]'); }
-function saveUsers(u) { localStorage.setItem('nhub_users', JSON.stringify(u)); }
-
-/* ── Sign Up ── */
-function doSignup() {
-  const name     = document.getElementById('sName').value.trim();
-  const email    = document.getElementById('sEmail').value.trim().toLowerCase();
-  const password = document.getElementById('sPassword').value;
-  const confirm  = document.getElementById('sConfirm').value;
-  let ok = true;
-
-  if (!name)                          { showErr('sName','sNameErr','Name is required'); ok=false; }
-  if (!email)                         { showErr('sEmail','sEmailErr','Email is required'); ok=false; }
-  else if (!isValidEmail(email))      { showErr('sEmail','sEmailErr','Enter a valid email address'); ok=false; }
-  if (!password)                      { showErr('sPassword','sPwErr','Password is required'); ok=false; }
-  else if (password.length < 6)      { showErr('sPassword','sPwErr','Password must be at least 6 characters'); ok=false; }
-  if (password && confirm !== password){ showErr('sConfirm','sConfErr','Passwords do not match'); ok=false; }
-  if (!ok) return;
-
-  const users = getUsers();
-  if (users.find(u => u.email === email)) {
-    showErr('sEmail','sEmailErr','This email is already registered'); return;
-  }
-
-  const newUser = { id: uid(), name, email, password, joinedAt: Date.now() };
-  users.push(newUser);
-  saveUsers(users);
-  startSession(newUser);
-  closeModal('authOverlay');
-  showToast('🎉', `Welcome, ${name}! Account created.`);
-}
-
-/* ── Login ── */
-function doLogin() {
-  const email    = document.getElementById('lEmail').value.trim().toLowerCase();
-  const password = document.getElementById('lPassword').value;
-  let ok = true;
-
-  if (!email)                    { showErr('lEmail','lEmailErr','Email is required'); ok=false; }
-  else if (!isValidEmail(email)) { showErr('lEmail','lEmailErr','Enter a valid email address'); ok=false; }
-  if (!password)                 { showErr('lPassword','lPwErr','Password is required'); ok=false; }
-  if (!ok) return;
-
-  const users = getUsers();
-  const user  = users.find(u => u.email === email && u.password === password);
-  if (!user) {
-    showErr('lEmail','lEmailErr','');
-    showErr('lPassword','lPwErr','Incorrect email or password');
-    return;
-  }
-
-  startSession(user);
-  closeModal('authOverlay');
-  showToast('👋', `Welcome back, ${user.name}!`);
-}
-
-/* ── Session ── */
-function startSession(user) {
-  currentUser = { id: user.id, name: user.name, email: user.email };
-  sessionStorage.setItem('nhub_session', JSON.stringify(currentUser));
-  updateHeader();
-  renderCards();
-}
-
-function doLogout() {
-  currentUser = null;
-  sessionStorage.removeItem('nhub_session');
-  updateHeader();
-  renderCards();
-  showToast('👋', 'Logged out. See you soon!');
-}
-
-/* ── Update header ── */
-function updateHeader() {
-  const actions = document.getElementById('headerActions');
-  const gate    = document.getElementById('authGate');
-
-  if (currentUser) {
-    const initial = currentUser.name.charAt(0).toUpperCase();
-    actions.innerHTML = `
-      <button class="btn btn-ghost" onclick="openFilter()">⚙ Filter</button>
-      <button class="btn btn-primary" onclick="openAddModal()">+ List a Service</button>
-      <div class="user-chip">
-        <div class="user-avatar">${initial}</div>
-        <span>${currentUser.name.split(' ')[0]}</span>
-      </div>
-      <button class="btn btn-danger" onclick="doLogout()">Logout</button>
-    `;
-    gate.classList.remove('show');
-  } else {
-    actions.innerHTML = `
-      <button class="btn btn-ghost" onclick="openAuthModal('login')">Sign In</button>
-      <button class="btn btn-primary" onclick="openAuthModal('signup')">Sign Up</button>
-    `;
-    gate.classList.add('show');
-  }
-}
-
-/* ── Guard: require login for sensitive actions ── */
-function openAddModal() {
-  if (!currentUser) { openAuthModal('login'); showToast('🔒','Please sign in to list a service.'); return; }
-  document.getElementById('addOverlay').classList.add('open');
-}
-
-/* ── Category icons ── */
-const CAT_ICONS = {
-  Plumbing:'🔧', Electrical:'⚡', Tutoring:'📚',
-  Delivery:'🚚', Cleaning:'🧹', Carpentry:'🪚', Other:'✨'
+/* ═══════════════════════════════════════════════════════════
+   STORAGE LAYER
+═══════════════════════════════════════════════════════════ */
+const DB={
+  getServices: ()=>JSON.parse(localStorage.getItem('nhub_services')||'[]'),
+  saveServices:(v)=>localStorage.setItem('nhub_services',JSON.stringify(v)),
+  getUsers:    ()=>JSON.parse(localStorage.getItem('nhub_users')||'[]'),
+  saveUsers:   (v)=>localStorage.setItem('nhub_users',JSON.stringify(v)),
+  getBookings: ()=>JSON.parse(localStorage.getItem('nhub_bookings3')||'[]'),
+  saveBookings:(v)=>localStorage.setItem('nhub_bookings3',JSON.stringify(v)),
+  getReviews:  ()=>JSON.parse(localStorage.getItem('nhub_reviews')||'[]'),
+  saveReviews: (v)=>localStorage.setItem('nhub_reviews',JSON.stringify(v)),
+  getFavs:     ()=>JSON.parse(localStorage.getItem('nhub_favs')||'[]'),
+  saveFavs:    (v)=>localStorage.setItem('nhub_favs',JSON.stringify(v)),
 };
 
-/* ── State ── */
-let services = JSON.parse(localStorage.getItem('nhub_services') || '[]');
-let bookings = parseInt(localStorage.getItem('nhub_bookings') || '0');
-let activeCat = 'All';
-let currentBookId = null;
+/* ═══════════════════════════════════════════════════════════
+   APP STATE
+═══════════════════════════════════════════════════════════ */
+let services        = DB.getServices();
+let currentUser     = JSON.parse(sessionStorage.getItem('nhub_session')||'null');
+let activeCat       = 'All';
+let activeTab       = 'services';
+let selectedRole    = 'customer';
+let currentBookId   = null;
+let currentPayMethod= 'upi';
+let pickedStars     = 0;
+let hoverStars      = 0;
+let reviewServiceId = null;
+let paymentSuccess  = false;
+let confirmCallback = null;
 
-/* ── Seed data (first run) ── */
-if (services.length === 0) {
-  services = [
-    { id: uid(), name: 'Pipe Leak & Plumbing Repair', category: 'Plumbing', price: 350, provider: 'Ravi Kumar', desc: 'Quick fix for pipe leaks, blocked drains, and bathroom fittings.', phone: '9876543210', location: 'Koramangala', rating: 5, ts: Date.now()-5000 },
-    { id: uid(), name: 'Home Electrical Wiring', category: 'Electrical', price: 600, provider: 'Suresh Electricals', desc: 'New wiring, switchboard repairs, fan installation and more.', phone: '9123456780', location: 'Indiranagar', rating: 4, ts: Date.now()-4000 },
-    { id: uid(), name: 'Math & Science Tutor', category: 'Tutoring', price: 400, provider: 'Priya Sharma', desc: 'CBSE/ICSE up to Class 12. Online & offline sessions available.', phone: '9988776655', location: 'HSR Layout', rating: 5, ts: Date.now()-3000 },
-    { id: uid(), name: 'Same-Day Parcel Delivery', category: 'Delivery', price: 80, provider: 'QuickMove Logistics', desc: 'Intra-city delivery within 4 hours. Safe packaging guaranteed.', phone: '9000011111', location: 'Whitefield', rating: 4, ts: Date.now()-2000 },
-    { id: uid(), name: 'Deep Home Cleaning', category: 'Cleaning', price: 1200, provider: 'CleanNest Co.', desc: 'Full-home cleaning including kitchen, bathrooms, and balconies.', phone: '9111122223', location: 'Marathahalli', rating: 5, ts: Date.now()-1000 },
+/* ── Seed data ── */
+if(services.length===0){
+  services=[
+    {id:uid(),name:'Pipe Leak & Plumbing Repair', category:'Plumbing',  price:350, provider:'Ravi Kumar',        desc:'Quick fix for pipe leaks, blocked drains, and bathroom fittings.',phone:'9876543210',location:'Koramangala',ts:Date.now()-5000,ownerId:'seed'},
+    {id:uid(),name:'Home Electrical Wiring',      category:'Electrical',price:600, provider:'Suresh Electricals',desc:'New wiring, switchboard repairs, fan installation and more.',     phone:'9123456780',location:'Indiranagar', ts:Date.now()-4000,ownerId:'seed'},
+    {id:uid(),name:'Math & Science Tutor',         category:'Tutoring',  price:400, provider:'Priya Sharma',      desc:'CBSE/ICSE up to Class 12. Online & offline sessions available.',  phone:'9988776655',location:'HSR Layout',  ts:Date.now()-3000,ownerId:'seed'},
+    {id:uid(),name:'Same-Day Parcel Delivery',     category:'Delivery',  price:80,  provider:'QuickMove Logistics',desc:'Intra-city delivery within 4 hours. Safe packaging guaranteed.', phone:'9000011111',location:'Whitefield',  ts:Date.now()-2000,ownerId:'seed'},
+    {id:uid(),name:'Deep Home Cleaning',           category:'Cleaning',  price:1200,provider:'CleanNest Co.',     desc:'Full-home cleaning including kitchen, bathrooms, and balconies.',  phone:'9111122223',location:'Marathahalli',ts:Date.now()-1000,ownerId:'seed'},
+    {id:uid(),name:'Custom Furniture & Carpentry', category:'Carpentry', price:800, provider:'Woodcraft Studio',  desc:'Bespoke furniture, shelving, and home woodwork done right.',        phone:'9222233334',location:'Jayanagar',   ts:Date.now()-500, ownerId:'seed'},
   ];
-  save();
+  DB.saveServices(services);
 }
 
-function uid() { return Math.random().toString(36).slice(2,9); }
-function save() { localStorage.setItem('nhub_services', JSON.stringify(services)); }
-function saveBookings() { localStorage.setItem('nhub_bookings', bookings); }
+/* ═══════════════════════════════════════════════════════════
+   MODAL HELPERS
+═══════════════════════════════════════════════════════════ */
+function openModal(id) {$(id).classList.add('open')}
+function closeModal(id){$(id).classList.remove('open')}
+function closeIfBg(e,id){if(e.target.id===id)closeModal(id)}
+document.addEventListener('keydown',e=>{
+  if(e.key==='Escape')
+    ['addOverlay','bookOverlay','reviewOverlay','authOverlay','confirmOverlay'].forEach(closeModal);
+});
 
-/* ── Render ── */
-function renderCards() {
-  const q = document.getElementById('searchInput').value.toLowerCase();
-  const sort = document.getElementById('sortSelect').value;
+/* ═══════════════════════════════════════════════════════════
+   CONFIRM MODAL  (reusable — replaces browser confirm())
+═══════════════════════════════════════════════════════════ */
+function showConfirm({icon='⚠️', title, message, confirmText='Confirm', confirmClass='btn-danger', onConfirm}){
+  confirmCallback = onConfirm;
+  $('confirmBody').innerHTML=`
+    <span class="confirm-icon">${icon}</span>
+    <div class="confirm-title">${title}</div>
+    <div class="confirm-msg">${message}</div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeModal('confirmOverlay')">Cancel</button>
+      <button class="btn ${confirmClass}" onclick="runConfirm()">${confirmText}</button>
+    </div>`;
+  openModal('confirmOverlay');
+}
+function runConfirm(){
+  closeModal('confirmOverlay');
+  if(typeof confirmCallback==='function') confirmCallback();
+  confirmCallback=null;
+}
 
-  let list = services.filter(s => {
-    const matchCat = activeCat === 'All' || s.category === activeCat;
-    const matchQ = !q || s.name.toLowerCase().includes(q) || s.provider.toLowerCase().includes(q) || s.category.toLowerCase().includes(q) || (s.location||'').toLowerCase().includes(q);
-    return matchCat && matchQ;
+/* ═══════════════════════════════════════════════════════════
+   FAVOURITES
+═══════════════════════════════════════════════════════════ */
+function toggleFav(serviceId,btn){
+  let favs=DB.getFavs();
+  const idx=favs.indexOf(serviceId);
+  if(idx===-1){favs.push(serviceId);btn.classList.add('faved');showToast('❤️','Added to favourites')}
+  else{favs.splice(idx,1);btn.classList.remove('faved');showToast('🤍','Removed from favourites')}
+  DB.saveFavs(favs);
+  $('statFavs').textContent=favs.length;
+  if(activeTab==='favs') renderFavsTab();
+}
+function isFaved(id){return DB.getFavs().includes(id)}
+
+/* ═══════════════════════════════════════════════════════════
+   SEARCH SUGGESTIONS
+═══════════════════════════════════════════════════════════ */
+let suggestTimer=null;
+function onSearchInput(){
+  const q=$('searchInput').value;
+  $('searchClear').classList.toggle('show',q.length>0);
+  clearTimeout(suggestTimer);
+  suggestTimer=setTimeout(()=>{
+    renderActiveTab();
+    if(q.length>=2) showSuggestions(); else hideSuggestions();
+  },200);
+}
+function showSuggestions(){
+  const q=$('searchInput').value.toLowerCase().trim();
+  if(!q||q.length<2){hideSuggestions();return}
+  const matches=[];
+  // Service name matches
+  services.filter(s=>s.name.toLowerCase().includes(q)||s.provider.toLowerCase().includes(q)||(s.location||'').toLowerCase().includes(q))
+    .slice(0,5).forEach(s=>{
+      matches.push(`<div class="suggestion-item" onclick="applySuggestion('${s.name.replace(/'/g,"\\'")}')">
+        <span class="s-icon">${CAT_ICONS[s.category]||'📋'}</span>
+        <span class="s-label">${s.name}</span>
+        <span class="s-cat">${s.category}</span>
+      </div>`);
+    });
+  // Category matches
+  Object.keys(CAT_ICONS).filter(c=>c.toLowerCase().includes(q)).slice(0,2).forEach(c=>{
+    matches.push(`<div class="suggestion-item" onclick="filterCatFromSearch('${c}')">
+      <span class="s-icon">${CAT_ICONS[c]}</span>
+      <span class="s-label">All <strong>${c}</strong> services</span>
+      <span class="s-cat">Category</span>
+    </div>`);
+  });
+  if(!matches.length){hideSuggestions();return}
+  $('suggestionsBox').innerHTML=matches.join('');
+  $('suggestionsBox').classList.add('show');
+}
+function hideSuggestions(){$('suggestionsBox').classList.remove('show')}
+function applySuggestion(name){
+  $('searchInput').value=name;$('searchClear').classList.add('show');
+  hideSuggestions();renderCards();
+}
+function filterCatFromSearch(cat){
+  $('searchInput').value='';$('searchClear').classList.remove('show');
+  hideSuggestions();
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  const pill=[...document.querySelectorAll('.pill')].find(p=>p.textContent.includes(cat));
+  if(pill)pill.classList.add('active');
+  activeCat=cat;renderCards();
+}
+function clearSearch(){
+  $('searchInput').value='';$('searchClear').classList.remove('show');
+  hideSuggestions();renderActiveTab();
+  $('searchInput').focus();
+}
+document.addEventListener('click',e=>{
+  if(!e.target.closest('.search-wrap'))hideSuggestions();
+});
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH VALIDATION HELPERS
+═══════════════════════════════════════════════════════════ */
+const isValidEmail=e=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e);
+function showErr(inputId,errId,msg){
+  $(inputId)?.classList.add('invalid');
+  const el=$(errId);if(el){el.textContent=msg;el.classList.add('show')}
+}
+function clearErr(inputId,errId){
+  $(inputId)?.classList.remove('invalid');
+  $(errId)?.classList.remove('show');
+}
+function hideErr(id){$(id)?.classList.remove('show')}
+function togglePw(id,btn){
+  const el=$(id);
+  el.type=el.type==='password'?'text':'password';
+  btn.textContent=el.type==='password'?'👁':'🙈';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH — OPEN / TABS
+═══════════════════════════════════════════════════════════ */
+function openAuthModal(tab='login'){switchAuthTab(tab);openModal('authOverlay')}
+function switchAuthTab(tab){
+  const isLogin=tab==='login';
+  $('loginForm').style.display=isLogin?'':'none';
+  $('signupForm').style.display=isLogin?'none':'';
+  $('tabLogin').classList.toggle('active',isLogin);
+  $('tabSignup').classList.toggle('active',!isLogin);
+  $('authModalTitle').textContent=isLogin?'Welcome Back 👋':'Create Account 🚀';
+  ['lEmail','lPassword','sName','sEmail','sPassword','sConfirm'].forEach(id=>{const el=$(id);if(el)el.value=''});
+  ['lEmailErr','lPwErr','sNameErr','sEmailErr','sPwErr','sConfErr'].forEach(hideErr);
+  selectedRole='customer';
+  $('roleCustomer').classList.add('selected');$('roleWorker').classList.remove('selected');
+}
+function selectRole(role){
+  selectedRole=role;
+  $('roleCustomer').classList.toggle('selected',role==='customer');
+  $('roleWorker').classList.toggle('selected',role==='worker');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   AUTH — SIGNUP / LOGIN / LOGOUT
+═══════════════════════════════════════════════════════════ */
+function doSignup(){
+  const name=$('sName').value.trim(),email=$('sEmail').value.trim().toLowerCase();
+  const password=$('sPassword').value,confirm=$('sConfirm').value;
+  let ok=true;
+  if(!name){showErr('sName','sNameErr','Name is required');ok=false}
+  if(!email){showErr('sEmail','sEmailErr','Email is required');ok=false}
+  else if(!isValidEmail(email)){showErr('sEmail','sEmailErr','Invalid email');ok=false}
+  if(!password){showErr('sPassword','sPwErr','Password is required');ok=false}
+  else if(password.length<6){showErr('sPassword','sPwErr','Minimum 6 characters');ok=false}
+  if(password&&confirm!==password){showErr('sConfirm','sConfErr','Passwords do not match');ok=false}
+  if(!ok)return;
+  const users=DB.getUsers();
+  if(users.find(u=>u.email===email)){showErr('sEmail','sEmailErr','Email already registered');return}
+  const newUser={id:uid(),name,email,password,role:selectedRole,joinedAt:Date.now()};
+  users.push(newUser);DB.saveUsers(users);
+  startSession(newUser);closeModal('authOverlay');
+  showToast('🎉',`Welcome, ${name}! Signed up as ${selectedRole}.`);
+}
+function doLogin(){
+  const email=$('lEmail').value.trim().toLowerCase(),password=$('lPassword').value;
+  let ok=true;
+  if(!email){showErr('lEmail','lEmailErr','Email is required');ok=false}
+  else if(!isValidEmail(email)){showErr('lEmail','lEmailErr','Invalid email');ok=false}
+  if(!password){showErr('lPassword','lPwErr','Password is required');ok=false}
+  if(!ok)return;
+  const user=DB.getUsers().find(u=>u.email===email&&u.password===password);
+  if(!user){showErr('lPassword','lPwErr','Incorrect email or password');return}
+  startSession(user);closeModal('authOverlay');
+  showToast('👋',`Welcome back, ${user.name}!`);
+}
+function startSession(user){
+  currentUser={id:user.id,name:user.name,email:user.email,role:user.role};
+  sessionStorage.setItem('nhub_session',JSON.stringify(currentUser));
+  updateHeader();renderActiveTab();
+}
+function doLogout(){
+  currentUser=null;sessionStorage.removeItem('nhub_session');
+  activeTab='services';updateHeader();renderActiveTab();
+  showToast('👋','Logged out. See you soon!');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   HEADER
+═══════════════════════════════════════════════════════════ */
+function updateHeader(){
+  const actions=$('headerActions'),gate=$('authGate'),tabs=$('navTabs'),panel=$('profilePanel');
+  if(currentUser){
+    const init=currentUser.name.charAt(0).toUpperCase();
+    const isWorker=currentUser.role==='worker';
+    actions.innerHTML=`
+      ${isWorker?`<button class="btn btn-primary btn-sm" onclick="openAddModal()">+ List</button>`:''}
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">${isDark?'☀️':'🌙'}</button>
+      <div class="user-chip" onclick="switchMainTab('bookings')">
+        <div class="user-avatar">${init}</div>
+        <span>${currentUser.name.split(' ')[0]}</span>
+        <span class="role-badge ${isWorker?'role-worker':'role-customer'}">${isWorker?'WORKER':'CUSTOMER'}</span>
+      </div>
+      <button class="btn btn-danger btn-sm" onclick="doLogout()">Logout</button>`;
+    gate.classList.remove('show');tabs.style.display='flex';panel.classList.add('show');
+    renderProfilePanel();
+  } else {
+    actions.innerHTML=`
+      <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Toggle theme">${isDark?'☀️':'🌙'}</button>
+      <button class="btn btn-ghost btn-sm" onclick="openAuthModal('login')">Sign In</button>
+      <button class="btn btn-primary btn-sm" onclick="openAuthModal('signup')">Sign Up</button>`;
+    gate.classList.add('show');tabs.style.display='none';panel.classList.remove('show');
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PROFILE PANEL
+═══════════════════════════════════════════════════════════ */
+function renderProfilePanel(){
+  if(!currentUser)return;
+  const myBookings=DB.getBookings().filter(b=>b.userId===currentUser.id);
+  const myServices=services.filter(s=>s.ownerId===currentUser.id);
+  const activeCount=myBookings.filter(b=>b.status==='active').length;
+  const init=currentUser.name.charAt(0).toUpperCase();
+  const isWorker=currentUser.role==='worker';
+  $('profilePanel').innerHTML=`
+    <div class="profile-big-avatar">${init}</div>
+    <div style="flex:1">
+      <div class="profile-name">${currentUser.name}
+        <span class="role-badge ${isWorker?'role-worker':'role-customer'}" style="margin-left:6px">${isWorker?'WORKER':'CUSTOMER'}</span>
+      </div>
+      <div class="profile-email">📧 ${currentUser.email}</div>
+      <div class="profile-stats">
+        <div><div class="p-stat-num">${myBookings.length}</div><div class="p-stat-label">Bookings</div></div>
+        <div><div class="p-stat-num">${activeCount}</div><div class="p-stat-label">Active</div></div>
+        <div><div class="p-stat-num">${DB.getFavs().length}</div><div class="p-stat-label">Favourites</div></div>
+        ${isWorker?`<div><div class="p-stat-num">${myServices.length}</div><div class="p-stat-label">Listings</div></div>`:''}
+      </div>
+    </div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   TAB NAVIGATION
+═══════════════════════════════════════════════════════════ */
+function switchMainTab(tab){
+  activeTab=tab;
+  ['services','bookings','mine','favs'].forEach(t=>{
+    $(`tab-${t}`)?.classList.toggle('active',t===tab);
+    $(`bn-${t}`)?.classList.toggle('active',t===tab);
+  });
+  const titles={services:'Available Services',bookings:'My Bookings',mine:'My Services',favs:'❤️ Favourites'};
+  $('sectionTitleText').textContent=titles[tab]||'Services';
+  $('pillsRow').parentElement.style.display=tab==='services'?'':'none';
+  renderActiveTab();
+}
+function renderActiveTab(){
+  if     (activeTab==='services') renderCards();
+  else if(activeTab==='bookings') renderBookingsTab();
+  else if(activeTab==='mine')     renderMyServicesTab();
+  else if(activeTab==='favs')     renderFavsTab();
+}
+
+/* ═══════════════════════════════════════════════════════════
+   SKELETON → REAL CARDS TRANSITION
+═══════════════════════════════════════════════════════════ */
+function showCards(){
+  $('skeletonGrid').style.display='none';
+  $('cardsGrid').style.display='';
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER: SERVICE CARDS
+═══════════════════════════════════════════════════════════ */
+function renderCards(){
+  const q=$('searchInput').value.toLowerCase();
+  const sort=$('sortSelect').value;
+  const minRating=parseFloat($('ratingFilter').value)||0;
+  const reviews=DB.getReviews();
+  const favs=DB.getFavs();
+
+  let list=services.filter(s=>{
+    const matchCat=activeCat==='All'||s.category===activeCat;
+    const matchQ=!q||s.name.toLowerCase().includes(q)||s.provider.toLowerCase().includes(q)||s.category.toLowerCase().includes(q)||(s.location||'').toLowerCase().includes(q);
+    const sRevs=reviews.filter(r=>r.serviceId===s.id);
+    const avg=sRevs.length?sRevs.reduce((a,r)=>a+r.rating,0)/sRevs.length:0;
+    const matchRating=minRating===0||(avg>=minRating);
+    return matchCat&&matchQ&&matchRating;
   });
 
-  if (sort === 'price-asc') list.sort((a,b) => a.price - b.price);
-  else if (sort === 'price-desc') list.sort((a,b) => b.price - a.price);
-  else if (sort === 'name') list.sort((a,b) => a.name.localeCompare(b.name));
-  else list.sort((a,b) => b.ts - a.ts);
+  const getAvg=s=>{const r=reviews.filter(x=>x.serviceId===s.id);return r.length?r.reduce((a,x)=>a+x.rating,0)/r.length:0};
+  if(sort==='price-asc')  list.sort((a,b)=>a.price-b.price);
+  else if(sort==='price-desc') list.sort((a,b)=>b.price-a.price);
+  else if(sort==='name')  list.sort((a,b)=>a.name.localeCompare(b.name));
+  else if(sort==='rating')list.sort((a,b)=>getAvg(b)-getAvg(a));
+  else                    list.sort((a,b)=>b.ts-a.ts);
 
-  const grid = document.getElementById('cardsGrid');
-  document.getElementById('resultCount').textContent = list.length + ' found';
-  document.getElementById('filterLabel').textContent = activeCat !== 'All' ? `Showing: ${activeCat}` : '';
+  $('resultCount').textContent=list.length+' found';
+  $('filterLabel').textContent=activeCat!=='All'?`Showing: ${activeCat}`:'';
+  $('statTotal').textContent=services.length;
+  $('statCat').textContent=new Set(services.map(s=>s.category)).size;
+  $('statBooked').textContent=DB.getBookings().filter(b=>b.status!=='cancelled').length;
+  $('statFavs').textContent=favs.length;
 
-  // Stats
-  const cats = new Set(services.map(s => s.category));
-  document.getElementById('statTotal').textContent = services.length;
-  document.getElementById('statCat').textContent = cats.size;
-  document.getElementById('statBooked').textContent = bookings;
+  showCards();
+  const isCustomer=currentUser&&currentUser.role==='customer';
+  const grid=$('cardsGrid');
+  grid.className='grid tab-content';
 
-  if (list.length === 0) {
-    grid.innerHTML = `<div class="empty">
-      <div class="icon">🔍</div>
+  if(list.length===0){
+    grid.innerHTML=`<div class="empty">
+      <span class="empty-icon">🔍</span>
       <h3>No services found</h3>
-      <p style="margin-top:6px;font-size:13px">Try a different category or add your own service above.</p>
-    </div>`;
-    return;
+      <p>Try a different search, category,<br>or lower the rating filter.</p>
+    </div>`;return;
   }
 
-  grid.innerHTML = list.map((s, i) => `
-    <div class="card" style="animation-delay:${i*0.05}s">
-      <button class="btn-delete" onclick="deleteService('${s.id}')" title="Remove listing">🗑</button>
+  grid.innerHTML=list.map((s,i)=>{
+    const sRevs=reviews.filter(r=>r.serviceId===s.id);
+    const avgRat=sRevs.length?sRevs.reduce((a,r)=>a+r.rating,0)/sRevs.length:0;
+    const canDel=currentUser&&(s.ownerId===currentUser.id||(s.ownerId==='seed'&&currentUser.role==='worker'));
+    const faved=favs.includes(s.id);
+    return`
+    <div class="card" style="animation-delay:${i*0.06}s">
+      ${canDel?`<button class="btn-delete" onclick="confirmDelete('${s.id}')" title="Delete">🗑</button>`:''}
       <div class="card-top">
-        <div class="card-icon">${CAT_ICONS[s.category] || '✨'}</div>
-        <span class="card-badge">${s.category}</span>
+        <div class="card-icon">${CAT_ICONS[s.category]||'✨'}</div>
+        <div class="card-top-right">
+          ${currentUser&&s.ownerId===currentUser.id?`<span class="owned-tag">YOURS</span>`:''}
+          <span class="card-badge">${s.category}</span>
+          <button class="btn-fav ${faved?'faved':''}" onclick="toggleFav('${s.id}',this)" title="Favourite">${faved?'❤️':'🤍'}</button>
+        </div>
       </div>
       <div class="card-name">${s.name}</div>
-      <div class="card-provider">
-        👤 ${s.provider}
-        ${s.location ? ` &nbsp;·&nbsp; 📍 ${s.location}` : ''}
-      </div>
-      ${s.desc ? `<div class="card-desc">${s.desc}</div>` : ''}
-      <div style="margin-bottom:12px">
-        <div class="rating">${'★'.repeat(s.rating||4)}${'☆'.repeat(5-(s.rating||4))}</div>
+      <div class="card-provider">👤 ${s.provider}${s.location?` &nbsp;·&nbsp; 📍 ${s.location}`:''}</div>
+      ${s.desc?`<div class="card-desc">${s.desc}</div>`:''}
+      <div class="star-row">
+        <span>${starsHtml(avgRat)}</span>
+        <span class="rev-count">${sRevs.length>0?`${avgRat.toFixed(1)} (${sRevs.length} review${sRevs.length>1?'s':''})`:'No reviews yet'}</span>
       </div>
       <div class="card-footer">
         <div class="price">₹${s.price.toLocaleString('en-IN')} <sub>/visit</sub></div>
-        <button class="btn-book" onclick="openBookModal('${s.id}')">Book Now →</button>
+        <div style="display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end">
+          <button class="btn-book" style="font-size:12px;padding:6px 10px" onclick="openReviewModal('${s.id}')">⭐ Reviews</button>
+          ${isCustomer?`<button class="btn-book" onclick="openBookModal('${s.id}')">Book →</button>`:''}
+          ${!currentUser?`<button class="btn-book" onclick="openAuthModal('login')">Book →</button>`:''}
+        </div>
       </div>
-    </div>
-  `).join('');
+    </div>`;
+  }).join('');
 }
 
-/* ── Filter by category ── */
-function filterCat(cat, el) {
-  activeCat = cat;
-  document.querySelectorAll('.pill').forEach(p => p.classList.remove('active'));
+/* ═══════════════════════════════════════════════════════════
+   RENDER: FAVOURITES TAB
+═══════════════════════════════════════════════════════════ */
+function renderFavsTab(){
+  const favIds=DB.getFavs();
+  const favServices=services.filter(s=>favIds.includes(s.id));
+  $('resultCount').textContent=favServices.length+' favourites';
+  showCards();
+  const grid=$('cardsGrid');
+  grid.className='grid tab-content';
+  if(favServices.length===0){
+    grid.innerHTML=`<div class="empty"><span class="empty-icon">🤍</span><h3>No favourites yet</h3><p>Tap the ❤️ heart on any service card to save it here.</p></div>`;
+    return;
+  }
+  const reviews=DB.getReviews();
+  const isCustomer=currentUser&&currentUser.role==='customer';
+  grid.innerHTML=favServices.map((s,i)=>{
+    const sRevs=reviews.filter(r=>r.serviceId===s.id);
+    const avgRat=sRevs.length?sRevs.reduce((a,r)=>a+r.rating,0)/sRevs.length:0;
+    return`
+    <div class="card" style="animation-delay:${i*0.06}s">
+      <div class="card-top">
+        <div class="card-icon">${CAT_ICONS[s.category]||'✨'}</div>
+        <div class="card-top-right">
+          <span class="card-badge">${s.category}</span>
+          <button class="btn-fav faved" onclick="toggleFav('${s.id}',this)">❤️</button>
+        </div>
+      </div>
+      <div class="card-name">${s.name}</div>
+      <div class="card-provider">👤 ${s.provider}${s.location?` · 📍 ${s.location}`:''}</div>
+      ${s.desc?`<div class="card-desc">${s.desc}</div>`:''}
+      <div class="star-row"><span>${starsHtml(avgRat)}</span><span class="rev-count">${sRevs.length?`${avgRat.toFixed(1)} (${sRevs.length})`:'No reviews'}</span></div>
+      <div class="card-footer">
+        <div class="price">₹${s.price.toLocaleString('en-IN')} <sub>/visit</sub></div>
+        <div style="display:flex;gap:6px">
+          <button class="btn-book" style="font-size:12px;padding:6px 10px" onclick="openReviewModal('${s.id}')">⭐</button>
+          ${isCustomer?`<button class="btn-book" onclick="openBookModal('${s.id}')">Book →</button>`:''}
+          ${!currentUser?`<button class="btn-book" onclick="openAuthModal('login')">Book →</button>`:''}
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER: MY BOOKINGS
+═══════════════════════════════════════════════════════════ */
+function renderBookingsTab(){
+  if(!currentUser){$('cardsGrid').innerHTML=`<div class="empty"><span class="empty-icon">🔒</span><h3>Sign in to see your bookings</h3></div>`;showCards();return}
+  const myBookings=DB.getBookings().filter(b=>b.userId===currentUser.id).sort((a,b)=>b.ts-a.ts);
+  $('resultCount').textContent=myBookings.length+' bookings';
+  renderProfilePanel();showCards();
+  const grid=$('cardsGrid');grid.className='grid tab-content';
+  if(myBookings.length===0){
+    grid.innerHTML=`<div class="empty"><span class="empty-icon">📦</span><h3>No bookings yet</h3><p>Go to All Services and book your first one!</p></div>`;return;
+  }
+  grid.innerHTML=`<div class="booking-list">${
+    myBookings.map(b=>{
+      const sc={active:'s-active',cancelled:'s-cancelled',completed:'s-completed'}[b.status]||'s-active';
+      return`
+      <div class="booking-item">
+        <div>
+          <div class="b-name">${CAT_ICONS[b.category]||'📋'} ${b.serviceName}</div>
+          <div class="b-meta">by ${b.providerName} · ${fmtDate(b.ts)} · ${(b.payMethod||'').toUpperCase()}</div>
+          <div style="font-size:13px;color:var(--accent);font-weight:700">₹${(b.price||0).toLocaleString('en-IN')}</div>
+          ${b.date?`<div style="font-size:12px;color:var(--muted);margin-top:3px">📅 ${b.date}</div>`:''}
+          ${b.refundInitiated?`<div class="refund-note">♻️ Refund Initiated — 3–5 business days</div>`:''}
+        </div>
+        <div class="b-right">
+          <span class="status-badge ${sc}">${b.status.toUpperCase()}</span>
+          ${b.status==='active'?`<button class="btn btn-danger btn-sm" onclick="confirmCancelBooking('${b.id}')">Cancel</button>`:''}
+          ${b.status!=='cancelled'?`<button class="btn btn-info btn-sm" onclick="openReviewModal('${b.serviceId}')">⭐ Review</button>`:''}
+        </div>
+      </div>`;
+    }).join('')
+  }</div>`;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   RENDER: MY SERVICES
+═══════════════════════════════════════════════════════════ */
+function renderMyServicesTab(){
+  if(!currentUser||currentUser.role!=='worker'){
+    showCards();$('cardsGrid').innerHTML=`<div class="empty"><span class="empty-icon">🔧</span><h3>Worker accounts only</h3><p>Sign up as a Worker to manage listings.</p></div>`;return;
+  }
+  const mine=services.filter(s=>s.ownerId===currentUser.id);
+  const reviews=DB.getReviews();
+  $('resultCount').textContent=mine.length+' listings';
+  renderProfilePanel();showCards();
+  const grid=$('cardsGrid');grid.className='grid tab-content';
+  if(mine.length===0){
+    grid.innerHTML=`<div class="empty"><span class="empty-icon">📋</span><h3>No services listed yet</h3><p>Click "+ List" in the header to add your first service.</p></div>`;return;
+  }
+  grid.innerHTML=mine.map((s,i)=>{
+    const sRevs=reviews.filter(r=>r.serviceId===s.id);
+    const avgRat=sRevs.length?sRevs.reduce((a,r)=>a+r.rating,0)/sRevs.length:0;
+    return`
+    <div class="card" style="animation-delay:${i*0.06}s">
+      <button class="btn-delete" onclick="confirmDelete('${s.id}')">🗑</button>
+      <div class="card-top"><div class="card-icon">${CAT_ICONS[s.category]||'✨'}</div><span class="card-badge">${s.category}</span></div>
+      <div class="card-name">${s.name}</div>
+      <div class="card-provider">📍 ${s.location||'—'}</div>
+      ${s.desc?`<div class="card-desc">${s.desc}</div>`:''}
+      <div class="star-row"><span>${starsHtml(avgRat)}</span><span class="rev-count">${sRevs.length} review${sRevs.length!==1?'s':''}</span></div>
+      <div class="card-footer">
+        <div class="price">₹${s.price.toLocaleString('en-IN')} <sub>/visit</sub></div>
+        <button class="btn-book" style="font-size:12px;padding:6px 10px" onclick="openReviewModal('${s.id}')">⭐ Reviews</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+/* ═══════════════════════════════════════════════════════════
+   FILTER
+═══════════════════════════════════════════════════════════ */
+function filterCat(cat,el){
+  activeCat=cat;
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
   el.classList.add('active');
   renderCards();
 }
 
-/* ── Add Service ── */
-function openAddModal() { document.getElementById('addOverlay').classList.add('open'); }
+/* ═══════════════════════════════════════════════════════════
+   ADD SERVICE
+═══════════════════════════════════════════════════════════ */
+function openAddModal(){
+  if(!currentUser){openAuthModal('login');showToast('🔒','Sign in first');return}
+  if(currentUser.role!=='worker'){showToast('⚠️','Only worker accounts can list services');return}
+  openModal('addOverlay');
+}
+function addService(){
+  const name=$('fName').value.trim(),cat=$('fCategory').value;
+  const price=parseFloat($('fPrice').value),provider=$('fProvider').value.trim();
+  const desc=$('fDesc').value.trim(),phone=$('fPhone').value.trim(),loc=$('fLocation').value.trim();
+  if(!name||!cat||isNaN(price)||!provider){showToast('⚠️','Fill all required fields');return}
+  services.unshift({id:uid(),name,category:cat,price,provider,desc,phone,location:loc,ts:Date.now(),ownerId:currentUser.id});
+  DB.saveServices(services);closeModal('addOverlay');
+  ['fName','fCategory','fPrice','fProvider','fDesc','fPhone','fLocation'].forEach(id=>{const el=$(id);if(el.tagName==='SELECT')el.selectedIndex=0;else el.value=''});
+  renderActiveTab();renderProfilePanel();showToast('🚀','Service listed successfully!');
+}
 
-function addService() {
-  const name = document.getElementById('fName').value.trim();
-  const cat  = document.getElementById('fCategory').value;
-  const price = parseFloat(document.getElementById('fPrice').value);
-  const provider = document.getElementById('fProvider').value.trim();
-  const desc = document.getElementById('fDesc').value.trim();
-  const phone = document.getElementById('fPhone').value.trim();
-  const loc   = document.getElementById('fLocation').value.trim();
-
-  if (!name || !cat || isNaN(price) || !provider) {
-    showToast('⚠️', 'Please fill in all required fields.'); return;
-  }
-
-  services.unshift({ id: uid(), name, category: cat, price, provider, desc, phone, location: loc, rating: 4, ts: Date.now() });
-  save(); closeModal('addOverlay');
-  ['fName','fCategory','fPrice','fProvider','fDesc','fPhone','fLocation'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el.tagName === 'SELECT') el.selectedIndex = 0; else el.value = '';
+/* ═══════════════════════════════════════════════════════════
+   DELETE SERVICE  (with confirmation)
+═══════════════════════════════════════════════════════════ */
+function confirmDelete(id){
+  const svc=services.find(s=>s.id===id);
+  if(!svc)return;
+  showConfirm({
+    icon:'🗑️',
+    title:'Delete Service?',
+    message:`Are you sure you want to delete <strong>"${svc.name}"</strong>? This cannot be undone.`,
+    confirmText:'Yes, Delete',
+    confirmClass:'btn-danger',
+    onConfirm:()=>deleteService(id),
   });
-  renderCards();
-  showToast('🚀', 'Service listed successfully!');
+}
+function deleteService(id){
+  const svc=services.find(s=>s.id===id);
+  if(svc&&svc.ownerId!=='seed'&&currentUser&&svc.ownerId!==currentUser.id){showToast('🚫','You can only delete your own services');return}
+  services=services.filter(s=>s.id!==id);
+  DB.saveServices(services);renderActiveTab();renderProfilePanel();
+  showToast('🗑','Service removed.');
 }
 
-/* ── Delete Service ── */
-function deleteService(id) {
-  services = services.filter(s => s.id !== id);
-  save(); renderCards();
-  showToast('🗑', 'Service removed.');
+/* ═══════════════════════════════════════════════════════════
+   BOOKING — STEP 1
+═══════════════════════════════════════════════════════════ */
+function openBookModal(id){
+  if(!currentUser){openAuthModal('login');showToast('🔒','Sign in to book');return}
+  if(currentUser.role==='worker'){showToast('⚠️','Workers can\'t book — use a customer account');return}
+  currentBookId=id;paymentSuccess=false;
+  const s=services.find(x=>x.id===id);
+  $('bookInfo').innerHTML=bookInfoHtml(s);
+  ['bName','bPhone','bDate','bNote'].forEach(fid=>$(fid).value='');
+  $('bName').value=currentUser.name;
+  goToStep(1);openModal('bookOverlay');
 }
-
-/* ── Book Service ── */
-function openBookModal(id) {
-  if (!currentUser) { openAuthModal('login'); showToast('🔒','Please sign in to book a service.'); return; }
-  currentBookId = id;
-  const s = services.find(x => x.id === id);
-  document.getElementById('bookInfo').innerHTML = `
-    <div class="service-name">${CAT_ICONS[s.category]} ${s.name}</div>
-    <div style="font-size:12px;color:var(--muted);margin-top:3px">by ${s.provider} ${s.location ? '· '+s.location : ''}</div>
+function bookInfoHtml(s){
+  if(!s)return'';
+  return`
+    <div class="service-name">${CAT_ICONS[s.category]||'📋'} ${s.name}</div>
+    <div style="font-size:12px;color:var(--muted);margin-top:3px">by ${s.provider}${s.location?' · '+s.location:''}</div>
     <div class="service-price" style="margin-top:8px;font-size:1.1rem">₹${s.price.toLocaleString('en-IN')} / visit</div>
-    ${s.phone ? `<div style="font-size:12px;color:var(--muted);margin-top:4px">📞 ${s.phone}</div>` : ''}
-  `;
-  ['bName','bPhone','bDate','bNote'].forEach(id => document.getElementById(id).value = '');
-  document.getElementById('bookOverlay').classList.add('open');
+    ${s.phone?`<div style="font-size:12px;color:var(--muted);margin-top:4px">📞 ${s.phone}</div>`:''}`;
+}
+function goToStep(n){
+  [1,2,3].forEach(i=>{
+    $(`bookStep${i}`).style.display=i===n?'':'none';
+    const ind=$(`step${i}ind`);
+    if(ind)ind.className='step'+(i===n?' active':i<n?' done':'');
+  });
+  $('bookModalTitle').textContent={1:'Book Service',2:'💸 Payment',3:'Booking Status'}[n]||'Book';
 }
 
-function confirmBooking() {
-  const name = document.getElementById('bName').value.trim();
-  const phone = document.getElementById('bPhone').value.trim();
-  if (!name || !phone) { showToast('⚠️', 'Please enter your name and phone.'); return; }
-  bookings++;
-  saveBookings();
-  closeModal('bookOverlay');
-  renderCards();
-  showToast('✅', `Booking confirmed! Provider will contact you at ${phone}.`);
+/* ═══════════════════════════════════════════════════════════
+   BOOKING — STEP 2: PAYMENT
+═══════════════════════════════════════════════════════════ */
+function goToPayment(){
+  const name=$('bName').value.trim(),phone=$('bPhone').value.trim();
+  if(!name||!phone){showToast('⚠️','Name and phone are required');return}
+  const s=services.find(x=>x.id===currentBookId);
+  $('payInfo').innerHTML=bookInfoHtml(s);
+  currentPayMethod='upi';
+  document.querySelectorAll('.pay-option').forEach((el,i)=>el.classList.toggle('selected',i===0));
+  $('upiExtra').classList.add('show');$('cardExtra').classList.remove('show');
+  ['upiId','cardNum','cardExp','cardCvv'].forEach(id=>$(id).value='');
+  goToStep(2);
+}
+function selectPay(el,method){
+  currentPayMethod=method;
+  document.querySelectorAll('.pay-option').forEach(o=>o.classList.remove('selected'));
+  el.classList.add('selected');
+  $('upiExtra').classList.toggle('show',method==='upi');
+  $('cardExtra').classList.toggle('show',method==='card');
+}
+function processPayment(){
+  if(currentPayMethod==='upi'){
+    const upi=$('upiId').value.trim();
+    if(!upi||!upi.includes('@')){showToast('⚠️','Enter valid UPI ID e.g. name@upi');return}
+  }else if(currentPayMethod==='card'){
+    const num=$('cardNum').value.replace(/\s/g,'');
+    const exp=$('cardExp').value.trim(),cvv=$('cardCvv').value.trim();
+    if(num.length<16){showToast('⚠️','Enter a valid 16-digit card number');return}
+    if(!exp.match(/^\d{2}\/\d{2}$/)){showToast('⚠️','Expiry must be MM/YY');return}
+    if(cvv.length<3){showToast('⚠️','Enter a valid CVV');return}
+  }
+  goToStep(3);
+  $('payResult').innerHTML=`<div style="margin-bottom:1.2rem;display:flex;justify-content:center"><div class="loader"></div></div><h3 style="font-family:var(--font-head)">Processing…</h3><p style="color:var(--muted);margin-top:.4rem">Please wait</p>`;
+  $('payResultBtn').style.display='none';
+  setTimeout(()=>showPayResult(Math.random()>0.1),2000);
+}
+function showPayResult(success){
+  paymentSuccess=success;
+  const s=services.find(x=>x.id===currentBookId);
+  if(success){
+    const newBooking={
+      id:uid(),userId:currentUser.id,serviceId:s.id,serviceName:s.name,
+      providerName:s.provider,category:s.category,price:s.price,payMethod:currentPayMethod,
+      name:$('bName').value.trim(),phone:$('bPhone').value.trim(),
+      date:$('bDate').value.trim(),note:$('bNote').value.trim(),
+      status:'active',refundInitiated:false,ts:Date.now(),
+    };
+    const all=DB.getBookings();all.push(newBooking);DB.saveBookings(all);
+    /* Animated success checkmark */
+    $('payResult').innerHTML=`
+      <div class="success-anim">
+        <div class="success-circle">
+          <svg width="36" height="36" viewBox="0 0 36 36">
+            <polyline class="success-check" points="7,19 14,26 29,10" style="stroke-dasharray:100;stroke-dashoffset:100"/>
+          </svg>
+        </div>
+      </div>
+      <h3 style="color:var(--success);font-family:var(--font-head)">Payment Successful! 🎉</h3>
+      <p style="margin-top:.4rem">₹${s.price.toLocaleString('en-IN')} paid via <strong>${currentPayMethod.toUpperCase()}</strong></p>
+      <p style="margin-top:6px;font-size:12px;color:var(--muted)">Booking ID: <strong style="color:var(--accent)">${newBooking.id.slice(0,8).toUpperCase()}</strong></p>`;
+    $('payResultBtn').textContent='📦 View My Bookings';
+    renderProfilePanel();
+  }else{
+    $('payResult').innerHTML=`
+      <div class="fail-anim"><div class="fail-circle">❌</div></div>
+      <h3 style="color:var(--accent2);font-family:var(--font-head)">Payment Failed</h3>
+      <p style="margin-top:.4rem">Transaction could not be processed.</p>
+      <p style="margin-top:4px;font-size:12px">Please check your details and try again.</p>`;
+    $('payResultBtn').textContent='← Try Again';
+  }
+  $('payResultBtn').style.display='block';
+}
+function finishBooking(){
+  if(paymentSuccess){closeModal('bookOverlay');switchMainTab('bookings');showToast('🎉','Booking confirmed!')}
+  else goToStep(2);
 }
 
-/* ── Modal helpers ── */
-function closeModal(id) { document.getElementById(id).classList.remove('open'); }
-function closeIfBg(e, id) { if (e.target.id === id) closeModal(id); }
-function openFilter() { showToast('⚙️', 'Use the sort dropdown or category pills to filter!'); }
-
-/* ── Toast ── */
-function showToast(icon, msg) {
-  document.getElementById('toastIcon').textContent = icon;
-  document.getElementById('toastMsg').textContent = msg;
-  const t = document.getElementById('toast');
-  t.classList.add('show');
-  setTimeout(() => t.classList.remove('show'), 3200);
+/* ═══════════════════════════════════════════════════════════
+   CANCEL BOOKING  (with confirmation)
+═══════════════════════════════════════════════════════════ */
+function confirmCancelBooking(bookingId){
+  showConfirm({
+    icon:'♻️',
+    title:'Cancel Booking?',
+    message:'Are you sure? If you paid by UPI or Card, a refund will be initiated within 3–5 business days.',
+    confirmText:'Yes, Cancel',
+    confirmClass:'btn-danger',
+    onConfirm:()=>cancelBooking(bookingId),
+  });
+}
+function cancelBooking(bookingId){
+  const all=DB.getBookings();
+  const idx=all.findIndex(b=>b.id===bookingId);
+  if(idx===-1||all[idx].userId!==currentUser?.id)return;
+  const booking=all[idx];
+  all[idx].status='cancelled';
+  all[idx].refundInitiated=booking.payMethod!=='cash';
+  DB.saveBookings(all);renderBookingsTab();renderProfilePanel();
+  const msg=booking.payMethod!=='cash'?'Booking cancelled. Refund initiated.':'Booking cancelled. (Cash — no refund)';
+  showToast('♻️',msg);
 }
 
-/* ── Keyboard close ── */
-document.addEventListener('keydown', e => {
-  if (e.key === 'Escape') { closeModal('addOverlay'); closeModal('bookOverlay'); closeModal('authOverlay'); }
-});
+/* ═══════════════════════════════════════════════════════════
+   REVIEWS
+═══════════════════════════════════════════════════════════ */
+function openReviewModal(serviceId){
+  reviewServiceId=serviceId;pickedStars=0;
+  $('reviewText').value='';updateStarPicker(0);
+  const svc=services.find(s=>s.id===serviceId);
+  $('reviewModalTitle').textContent=`⭐ ${svc?.name||'Reviews'}`;
+  $('writeReviewSection').style.display=(currentUser&&currentUser.role==='customer')?'':'none';
+  renderReviewList(serviceId);openModal('reviewOverlay');
+}
+function pickStar(n){pickedStars=n;updateStarPicker(n)}
+function hoverStar(n){if(pickedStars===0)updateStarPicker(n)}
+function unhoverStar(){if(pickedStars===0)updateStarPicker(0)}
+function updateStarPicker(n){
+  document.querySelectorAll('.star-pick').forEach((el,i)=>el.classList.toggle('lit',i<n));
+}
+function submitReview(){
+  if(!currentUser){showToast('🔒','Sign in to review');return}
+  if(pickedStars===0){showToast('⚠️','Pick a star rating first');return}
+  const text=$('reviewText').value.trim();
+  const reviews=DB.getReviews();
+  const idx=reviews.findIndex(r=>r.serviceId===reviewServiceId&&r.userId===currentUser.id);
+  const review={id:uid(),serviceId:reviewServiceId,userId:currentUser.id,userName:currentUser.name,rating:pickedStars,text,ts:Date.now()};
+  if(idx!==-1)reviews[idx]=review;else reviews.push(review);
+  DB.saveReviews(reviews);
+  pickedStars=0;updateStarPicker(0);$('reviewText').value='';
+  renderReviewList(reviewServiceId);renderActiveTab();
+  showToast('⭐','Review submitted! Thank you.');
+}
+function renderReviewList(serviceId){
+  const reviews=DB.getReviews().filter(r=>r.serviceId===serviceId).sort((a,b)=>b.ts-a.ts);
+  $('reviewCountLabel').textContent=`${reviews.length} Review${reviews.length!==1?'s':''}`;
+  $('noReviews').style.display=reviews.length===0?'block':'none';
+  $('reviewList').innerHTML=reviews.map(r=>`
+    <div class="review-item">
+      <div class="review-header">
+        <span class="review-author">👤 ${r.userName}</span>
+        <span class="review-date">${fmtDate(r.ts)}</span>
+      </div>
+      <div class="review-stars">${starsHtml(r.rating)} <span style="font-size:11px;color:var(--muted);margin-left:4px">${r.rating}/5</span></div>
+      ${r.text?`<div class="review-text">${r.text}</div>`:''}
+    </div>`).join('');
+}
 
-/* ── Init ── */
+/* ═══════════════════════════════════════════════════════════
+   INIT — skeleton → real content after brief delay
+═══════════════════════════════════════════════════════════ */
 updateHeader();
-renderCards();
+// Show skeleton for 700ms to demonstrate the loader, then render
+setTimeout(()=>{ renderActiveTab(); }, 700);
 </script>
 </body>
 </html>
